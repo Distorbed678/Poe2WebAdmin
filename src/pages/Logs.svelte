@@ -167,7 +167,7 @@
       <time>{clock(e.ts_ms)}</time>
       <span class="lvl">{e.level}</span>
       <span class="tgt">{e.target}</span>
-      <span class="msg">{e.message}{#if fields(e)} <span class="flds">{fields(e)}</span>{/if}</span>
+      <span class="msg">{e.message}{#if fields(e)}{" "}<span class="flds">{fields(e)}</span>{/if}</span>
     </div>
   {:else}
     <p class="muted empty-log">{conn === 'open' ? 'No events match the filters yet.' : 'Waiting for the connection...'}</p>

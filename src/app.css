@@ -236,3 +236,5 @@ dialog::backdrop { background: rgb(0 0 0 / 0.55); }
   .line { grid-template-columns: 1fr; }
   .line .tgt { display: none; }
 }
+
+#app { height: 100%; }

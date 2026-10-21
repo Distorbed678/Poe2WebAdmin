@@ -26,6 +26,7 @@
   <form class="card login" onsubmit={submit}>
     <h1>PoE2 server admin</h1>
     <p class="muted">Sign in with an admin account.</p>
+    {#if auth.pending}<p class="notice" role="status">Signing you in...</p>{/if}
     {#if auth.notice}<p class="notice" role="status">{auth.notice}</p>{/if}
     {#if error}<p class="err" role="alert">{error}</p>{/if}
     <label class="field">

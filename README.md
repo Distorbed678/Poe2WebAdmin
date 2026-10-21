@@ -10,6 +10,7 @@ The web admin site of the **Path of Exile 2 client 0.5.5e private server**
 | Page | What it does |
 |---|---|
 | Login | `POST /api/v1/login` with `kind: "web"` (12 hour token). Only admin accounts get in |
+| `#/token-login?t=<token>` | One-time sign-in link (the launcher's "Open web admin"): removes the token from the address bar and history, redeems it once with `POST /api/v1/web-token/redeem` for a web session. Expired, used or malformed links land on the login page with a notice |
 | Dashboard | Server info, players online, instance summary, busiest instances. Refreshes every 5 s |
 | Live logs | WebSocket log stream: level, target prefix and text filters (applied by the server), pause and resume, autoscroll, at most 3000 lines in the DOM, colour by level, reconnect with backoff |
 | Players online | Kick, mute (minutes, or until unmuted), unmute, transfer (to an instance id, or a new area, seed, topology, orientation) |

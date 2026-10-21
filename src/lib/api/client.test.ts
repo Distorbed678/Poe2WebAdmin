@@ -104,6 +104,22 @@ describe('api client', () => {
     expect(res.response.status).toBe(401);
     expect(onUnauthorized).not.toHaveBeenCalled();
   });
+
+  it('does not treat a refused one-time sign-in token as a lost session', async () => {
+    const tokens = new TokenStore(memoryStorage());
+    tokens.set('keep');
+    const onUnauthorized = vi.fn();
+    const api = createApi({
+      baseUrl: 'http://x',
+      fetch: (async () => json({ error: 'invalid or expired web token' }, 401)) as unknown as typeof fetch,
+      tokens,
+      onUnauthorized,
+    });
+    const res = await api.POST('/api/v1/web-token/redeem', { body: { token: 'ab'.repeat(32) } });
+    expect(res.response.status).toBe(401);
+    expect(onUnauthorized).not.toHaveBeenCalled();
+    expect(tokens.get()).toBe('keep');
+  });
 });
 
 describe('unwrap / errorMessage', () => {

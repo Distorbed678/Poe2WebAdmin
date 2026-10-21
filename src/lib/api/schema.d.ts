@@ -265,6 +265,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/game-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchanges a launcher token for a fresh `game_remember` token (the client's Remember Me
+         *     credential). The launcher writes it into the client's credentials file for auto-login.
+         * @description The game login retires a token when it uses it (rolling tokens), so the launcher token
+         *     itself must never be written to the client: it would be revoked by the first game login
+         *     and the launcher would be logged out. Only launcher tokens may call this; the new token
+         *     lasts `[accounts] remember_days` and does not touch the account's other tokens.
+         */
+        post: operations["game_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/login": {
         parameters: {
             query?: never;
@@ -293,6 +317,26 @@ export interface paths {
         put?: never;
         /** Revokes the token that was used. */
         post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The calling account: name, role (`player` or `admin`) and state. For the launcher, to decide
+         *     whether to offer "Open web admin" without logging in again. Works with a web or launcher token.
+         */
+        get: operations["me"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -347,6 +391,49 @@ export interface paths {
         get: operations["server"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/web-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exchanges a launcher token for a single-use web sign-in token, so "Open web admin" can open
+         *     the browser already logged in. The token lasts `[web] web_token_ttl_secs` (default 60) and
+         *     can be redeemed once with `POST /web-token/redeem`; asking again replaces the account's
+         *     earlier unused token. Only admins' launcher tokens may call this.
+         */
+        post: operations["web_token"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/web-token/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redeems a web sign-in token for a normal `web` session (12 hours), once. The web admin calls
+         *     this from its `#/token-login` page. An unknown, used or expired token gets `401`, all alike.
+         *     Failures count against the caller's IP like failed logins (`[security]`): `429` when locked.
+         */
+        post: operations["redeem_web_token"];
         delete?: never;
         options?: never;
         head?: never;
@@ -511,7 +598,7 @@ export interface components {
              * @description Unix seconds.
              */
             expires_at: number;
-            /** @description `web` or `launcher`. */
+            /** @description `web`, `launcher` or (from `POST /game-token`) `game_remember`. */
             kind: string;
             /** @description 64 hex characters: send as `Authorization: Bearer <token>`. Shown only once. */
             token: string;
@@ -573,9 +660,20 @@ export interface components {
         /** @description `GET /server`. */
         ServerInfo: {
             cluster_id: string;
+            /** @description Realm region written into the client's gateway list. */
+            gateway_region: string;
+            /**
+             * Format: int32
+             * @description Port of the instance server the client is sent to (with `login_host`); the launcher
+             *     trusts both addresses in the client hook.
+             */
+            instance_port: number;
             /** @description Host the game client connects to. */
             login_host: string;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Port the client connects to for login (`[network.login] public_port`, else the bind port).
+             */
             login_port: number;
             /** @description The gateway's display name. */
             name: string;
@@ -601,6 +699,31 @@ export interface components {
             seed?: number | null;
             /** Format: int32 */
             topology?: number | null;
+        };
+        /** @description `POST /web-token/redeem`. */
+        WebTokenRedeemRequest: {
+            /** @description The `token` from `POST /web-token`. */
+            token: string;
+        };
+        /** @description `POST /web-token`. */
+        WebTokenResponse: {
+            /**
+             * Format: int64
+             * @description Seconds from now until it expires (`[web] web_token_ttl_secs`).
+             */
+            expires_in_secs: number;
+            /**
+             * @description Where to open the web admin so it signs in with this token: append it to the server's
+             *     web address, e.g. `http://host:8080` + `login_path`. The token is in the URL fragment,
+             *     so it is not sent to the server, not logged by proxies and not sent as a referrer; the
+             *     web admin removes it from the address bar and the history at once.
+             */
+            login_path: string;
+            /**
+             * @description 64 hex characters. Single use: redeem it with `POST /web-token/redeem` (the web admin
+             *     does this itself when opened through `login_path`). Shown only once; never log it.
+             */
+            token: string;
         };
     };
     responses: never;
@@ -1349,6 +1472,42 @@ export interface operations {
             };
         };
     };
+    game_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description not a launcher token */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -1388,6 +1547,15 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorBody"];
                 };
             };
+            /** @description too many failed attempts for this account or IP; see the Retry-After header */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
         };
     };
     logout: {
@@ -1404,6 +1572,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountInfo"];
+                };
             };
             401: {
                 headers: {
@@ -1454,6 +1649,15 @@ export interface operations {
             };
             /** @description wrong current password */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description too many failed password attempts; see the Retry-After header */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1527,6 +1731,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServerInfo"];
+                };
+            };
+        };
+    };
+    web_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebTokenResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description not a launcher token, or not an admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description too many unused tokens are waiting */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    redeem_web_token: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebTokenRedeemRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            /** @description unknown, already used or expired token */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description the account is disabled */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description too many failed redeem attempts from this IP; see the Retry-After header */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };

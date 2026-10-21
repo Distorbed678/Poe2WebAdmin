@@ -55,7 +55,8 @@ export function createApi(opts: ApiOptions = {}) {
       return request;
     },
     onResponse({ request, response }) {
-      if (response.status === 401 && !new URL(request.url).pathname.endsWith('/login')) {
+      // Login and the one-time token redemption have no session to lose: their 401 is the answer.
+      if (response.status === 401 && !/\/(login|web-token\/redeem)$/.test(new URL(request.url).pathname)) {
         tokens.clear();
         opts.onUnauthorized?.();
       }

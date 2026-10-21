@@ -31,6 +31,11 @@ class Router {
     }
   }
 
+  /** Re-reads the address (after it was changed without a `hashchange`, e.g. `history.replaceState`). */
+  sync(): void {
+    this.route = parseHash(location.hash);
+  }
+
   get page(): string {
     return this.route.segments[0] ?? 'dashboard';
   }

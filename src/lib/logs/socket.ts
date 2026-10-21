@@ -3,8 +3,8 @@ import { backoffDelay, parseServerMessage, toWireFilter, type LogFilter, type Se
 export type SocketState = 'connecting' | 'open' | 'reconnecting' | 'closed';
 
 export interface LogSocketOptions {
-  /** The URL for the next attempt (read at every attempt, so it can carry a fresh token). */
-  url: () => string | null;
+  /** The URL for the next attempt (asked at every attempt, so it can carry a fresh single-use ticket). */
+  url: () => string | null | Promise<string | null>;
   filter: () => LogFilter;
   onMessage: (m: ServerMessage) => void;
   onState: (s: SocketState, info?: { attempt: number; delayMs?: number }) => void;
@@ -21,18 +21,22 @@ export class LogSocket {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private attempt = 0;
   private stopped = true;
+  /** Bumped by start() and stop(): a ticket that arrives for an older run is dropped. */
+  private run = 0;
 
   constructor(private readonly o: LogSocketOptions) {}
 
   start(): void {
     if (!this.stopped) return;
     this.stopped = false;
+    this.run += 1;
     this.attempt = 0;
     this.connect();
   }
 
   stop(): void {
     this.stopped = true;
+    this.run += 1;
     (this.o.clearTimeoutImpl ?? clearTimeout)(this.timer ?? undefined);
     this.timer = null;
     const ws = this.ws;
@@ -56,12 +60,43 @@ export class LogSocket {
 
   private connect(): void {
     if (this.stopped) return;
-    const url = this.o.url();
+    this.o.onState(this.attempt === 0 ? 'connecting' : 'reconnecting', { attempt: this.attempt });
+    let url: string | null | Promise<string | null>;
+    try {
+      url = this.o.url();
+    } catch {
+      url = null;
+    }
+    if (typeof url === 'string' || url === null) {
+      this.open(url);
+      return;
+    }
+    // A ticket has to be fetched first. If that fails the attempt counts as a failed connect.
+    const run = this.run;
+    url.then(
+      (u) => {
+        if (this.run === run) this.open(u);
+      },
+      () => {
+        if (this.run === run) this.retryLater(false);
+      },
+    );
+  }
+
+  private retryLater(opened: boolean): void {
+    if (!opened) this.o.onConnectFailed?.();
+    const delay = backoffDelay(this.attempt);
+    this.attempt += 1;
+    this.o.onState('reconnecting', { attempt: this.attempt, delayMs: delay });
+    this.timer = (this.o.setTimeoutImpl ?? setTimeout)(() => this.connect(), delay);
+  }
+
+  private open(url: string | null): void {
+    if (this.stopped) return;
     if (!url) {
       this.o.onState('closed');
       return;
     }
-    this.o.onState(this.attempt === 0 ? 'connecting' : 'reconnecting', { attempt: this.attempt });
     const Impl = this.o.WebSocketImpl ?? WebSocket;
     const ws = new Impl(url);
     this.ws = ws;
@@ -81,11 +116,7 @@ export class LogSocket {
     ws.onclose = () => {
       if (this.ws !== ws || this.stopped) return;
       this.ws = null;
-      if (!opened) this.o.onConnectFailed?.();
-      const delay = backoffDelay(this.attempt);
-      this.attempt += 1;
-      this.o.onState('reconnecting', { attempt: this.attempt, delayMs: delay });
-      this.timer = (this.o.setTimeoutImpl ?? setTimeout)(() => this.connect(), delay);
+      this.retryLater(opened);
     };
     ws.onerror = () => {
       /* onclose follows and handles the retry */

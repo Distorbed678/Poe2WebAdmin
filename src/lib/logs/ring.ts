@@ -120,8 +120,12 @@ export function backoffDelay(attempt: number, rand = Math.random()): number {
   return Math.round(base * (1 + 0.25 * rand));
 }
 
-/** `ws(s)://host/api/v1/admin/logs/ws?token=...` for the page's own origin. */
-export function logsWsUrl(loc: Pick<Location, 'protocol' | 'host'>, token: string): string {
+/**
+ * `ws(s)://host/api/v1/admin/logs/ws?ticket=...` for the page's own origin. The ticket is a
+ * single-use value from `POST /api/v1/admin/logs/ws-ticket`, never the session token, because
+ * proxies log URLs.
+ */
+export function logsWsUrl(loc: Pick<Location, 'protocol' | 'host'>, ticket: string): string {
   const scheme = loc.protocol === 'https:' ? 'wss' : 'ws';
-  return `${scheme}://${loc.host}/api/v1/admin/logs/ws?token=${encodeURIComponent(token)}`;
+  return `${scheme}://${loc.host}/api/v1/admin/logs/ws?ticket=${encodeURIComponent(ticket)}`;
 }

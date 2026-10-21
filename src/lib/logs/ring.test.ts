@@ -133,10 +133,10 @@ describe('backoffDelay', () => {
 });
 
 describe('logsWsUrl', () => {
-  it('picks ws or wss and encodes the token', () => {
+  it('picks ws or wss and encodes the ticket', () => {
     expect(logsWsUrl({ protocol: 'http:', host: 'h:8080' }, 'a b')).toBe(
-      'ws://h:8080/api/v1/admin/logs/ws?token=a%20b',
+      'ws://h:8080/api/v1/admin/logs/ws?ticket=a%20b',
     );
-    expect(logsWsUrl({ protocol: 'https:', host: 'h' }, 't')).toBe('wss://h/api/v1/admin/logs/ws?token=t');
+    expect(logsWsUrl({ protocol: 'https:', host: 'h' }, 't')).toBe('wss://h/api/v1/admin/logs/ws?ticket=t');
   });
 });

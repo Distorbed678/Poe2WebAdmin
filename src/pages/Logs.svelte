@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
-  import { api, type LogEvent, type LogLevel } from '../lib/api/client';
+  import { api, unwrap, type LogEvent, type LogLevel } from '../lib/api/client';
   import { auth } from '../lib/auth.svelte';
   import { LEVELS, LogStore, logsWsUrl, matchesFilter, type LogFilter } from '../lib/logs/ring';
   import { LogSocket, type SocketState } from '../lib/logs/socket';
@@ -34,7 +34,13 @@
   }
 
   const socket = new LogSocket({
-    url: () => (auth.token ? logsWsUrl(location, auth.token) : null),
+    // A browser cannot send headers on a WebSocket: every attempt asks for a single-use ticket
+    // (the session token itself never goes into a URL).
+    url: async () => {
+      if (!auth.token) return null;
+      const t = await unwrap(api.POST('/api/v1/admin/logs/ws-ticket'));
+      return logsWsUrl(location, t.ticket);
+    },
     filter,
     onState(s, info) {
       conn = s;

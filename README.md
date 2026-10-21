@@ -1,7 +1,7 @@
 # Poe2WebAdmin
 
 The web admin site of the **Path of Exile 2 client 0.5.5e private server**
-([Poe2ModdingProject](https://github.com/Distorbed678/Poe2ModdingProject), private repo; this repo is its submodule
+([Poe2ModdingProject](https://github.com/Distorbed678/Poe2ModdingProject); this repo is its submodule
 `modules/web-admin`). A single-page app in **Svelte 5 + Vite + TypeScript** that talks to the server's web API
 (`crates/poe-web-api`, documented in `docs/architecture/web-api.md` of the main repo).
 
@@ -99,5 +99,18 @@ scripts/gen-api.mjs                 the gen:api script
 
 ## Security notes
 
-Passwords are sent in request bodies and the log WebSocket takes the token in the query string (browsers cannot set
-headers on a WebSocket). The server listens on loopback by default; put a TLS reverse proxy in front before exposing it.
+Passwords are sent in request bodies. The server listens on loopback by default; put a TLS reverse proxy in front before
+exposing it. The log WebSocket does not take the session token in its URL (browsers cannot set headers on a WebSocket):
+the page asks `POST /api/v1/admin/logs/ws-ticket` for a single-use ticket before every connection attempt and puts that in
+the query string, so a proxy's access log never holds a usable credential. The server sends a content security policy
+(own scripts, styles and connections only) with the files. Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
+
+## Disclaimer
+
+This is an unofficial, fan-made project for personal and educational use. It is **not affiliated with, endorsed by or connected to Grinding Gear Games**; "Path of Exile" is their trademark. **No game files are distributed** in this repository (no assets, bundles, tables or executables): you need your own legal copy of the game. Use is at your own risk. This site only administers the private server of Poe2ModdingProject.
+
+Contributing: [CONTRIBUTING.md](https://github.com/Distorbed678/Poe2ModdingProject/blob/main/CONTRIBUTING.md) in the main repository (checks for this repo: `npm run check`, `npm test`, `npm run build`).
+
+## License
+
+MIT OR Apache-2.0, at your option: [LICENSE-MIT](LICENSE-MIT), [LICENSE-APACHE](LICENSE-APACHE). Copyright (c) 2026 Distorbed678 and contributors.

@@ -180,6 +180,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/logs/ws-ticket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A single-use ticket for the log WebSocket, valid for `[web] web_token_ttl_secs`. Pass it as
+         *     `?ticket=` to `GET /admin/logs/ws`; ask again for every connection.
+         */
+        post: operations["logs_ws_ticket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/players/{name}/kick": {
         parameters: {
             query?: never;
@@ -725,6 +745,16 @@ export interface components {
              */
             token: string;
         };
+        /** @description `POST /admin/logs/ws-ticket`. */
+        WsTicketResponse: {
+            /**
+             * Format: int64
+             * @description Seconds from now until it expires (`[web] web_token_ttl_secs`).
+             */
+            expires_in_secs: number;
+            /** @description 64 hex characters, single use: `GET /admin/logs/ws?ticket=<ticket>`. Never log it. */
+            ticket: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -1201,10 +1231,10 @@ export interface operations {
             header?: never;
             path: {
                 /**
-                 * @description The admin's web token, because browsers cannot set headers on a WebSocket (the
-                 *     `Authorization` header works too).
+                 * @description A ticket from `POST /admin/logs/ws-ticket`, because browsers cannot set headers on a
+                 *     WebSocket (the `Authorization` header with the admin's web token works too).
                  */
-                token: string | null;
+                ticket: string | null;
             };
             cookie?: never;
         };
@@ -1226,6 +1256,49 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    logs_ws_ticket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WsTicketResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

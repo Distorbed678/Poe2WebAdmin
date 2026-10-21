@@ -74,4 +74,66 @@ describe('LogSocket', () => {
     timers[1]!.fn(); // a timer that fires after stop() must not reconnect
     expect(FakeWs.all).toHaveLength(2);
   });
+
+  it('asks for a fresh ticket before every attempt and survives a failed ask', async () => {
+    FakeWs.all = [];
+    const timers: Array<{ fn: () => void; ms: number }> = [];
+    const states: string[] = [];
+    const failed = vi.fn();
+    let n = 0;
+    const s = new LogSocket({
+      url: async () => {
+        n += 1;
+        if (n === 2) throw new Error('ticket refused');
+        return `ws://x/logs?ticket=t${n}`;
+      },
+      filter: () => DEFAULT_FILTER,
+      onMessage: () => {},
+      onState: (st) => states.push(st),
+      onConnectFailed: failed,
+      WebSocketImpl: FakeWs as unknown as typeof WebSocket,
+      setTimeoutImpl: ((fn: () => void, ms: number) => {
+        timers.push({ fn, ms });
+        return 1;
+      }) as unknown as typeof setTimeout,
+      clearTimeoutImpl: (() => {}) as unknown as typeof clearTimeout,
+    });
+    s.start();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(FakeWs.all.map((w) => w.url)).toEqual(['ws://x/logs?ticket=t1']);
+    FakeWs.all[0]!.open();
+    FakeWs.all[0]!.drop();
+    timers[0]!.fn(); // second attempt: the ticket request fails
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(FakeWs.all).toHaveLength(1);
+    expect(failed).toHaveBeenCalledOnce();
+    expect(timers).toHaveLength(2);
+    timers[1]!.fn(); // third attempt: a fresh ticket
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(FakeWs.all.map((w) => w.url)).toEqual(['ws://x/logs?ticket=t1', 'ws://x/logs?ticket=t3']);
+    // stop() while a ticket is on its way: no socket is opened afterwards.
+    s.stop();
+    expect(states.at(-1)).toBe('closed');
+  });
+
+  it('opens nothing when the ticket arrives after stop()', async () => {
+    FakeWs.all = [];
+    let release: (u: string) => void = () => {};
+    const s = new LogSocket({
+      url: () => new Promise<string>((r) => (release = r)),
+      filter: () => DEFAULT_FILTER,
+      onMessage: () => {},
+      onState: () => {},
+      WebSocketImpl: FakeWs as unknown as typeof WebSocket,
+    });
+    s.start();
+    s.stop();
+    release('ws://x/late');
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(FakeWs.all).toHaveLength(0);
+  });
 });

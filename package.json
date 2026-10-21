@@ -2,7 +2,7 @@
   "name": "poe2-web-admin",
   "version": "0.1.0",
   "private": true,
-  "license": "MIT OR Apache-2.0",
+  "license": "MIT",
   "type": "module",
   "description": "Web admin SPA for the PoE2 0.5.5e private server",
   "scripts": {

@@ -375,6 +375,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/mods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every mod in the server's mods folder with its state, and whether a restart would change
+         *     what is loaded (admin).
+         */
+        get: operations["admin_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/motd": {
         parameters: {
             query?: never;
@@ -765,6 +785,23 @@ export interface paths {
          *     whether to offer "Open web admin" without logging in again. Works with a web or launcher token.
          */
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mods/{id}/{file}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The package zip of an offered mod. `ETag` is the package's SHA-256; `If-None-Match` gets 304. */
+        get: operations["package"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1232,6 +1269,70 @@ export interface components {
             /** @description Oldest first. */
             samples: components["schemas"]["MetricsPoint"][];
         };
+        /** @description A client mod this server requires (`GET /server`, field `mods`). */
+        ModInfo: {
+            authors: string[];
+            /** @description The client half contains a native DLL (code that runs in the game process). */
+            code: boolean;
+            description: string;
+            game_versions: string[];
+            /**
+             * Format: int32
+             * @description The client mod API the client half was built for.
+             */
+            hook_api?: number | null;
+            id: string;
+            name: string;
+            /** @description The login check requires it (all listed mods are). */
+            required: boolean;
+            /** @description SHA-256 of the package zip, 64 lower-case hex digits. */
+            sha256: string;
+            /** @description `client` or `both`. */
+            side: string;
+            /**
+             * Format: int64
+             * @description Size of the package in bytes.
+             */
+            size: number;
+            /** @description Where to download the package: the server itself first, then `[mods] extra_urls`. */
+            sources: components["schemas"]["ModSource"][];
+            /** @description The exact version the server pins (semver). */
+            version: string;
+        };
+        /** @description One download address of a mod package. */
+        ModSource: {
+            /** @description For `server`: `/api/v1/mods/{id}/{version}.zip`. */
+            path?: string | null;
+            /** @description `server` (a path on this server's web address) or `url` (an absolute address). */
+            type: string;
+            /** @description For `url`. */
+            url?: string | null;
+        };
+        ModStatusInfo: {
+            /** @description Chat commands the mod added. */
+            commands: string[];
+            /** @description Why a mod is not loaded, or a note. */
+            detail: string;
+            enabled: boolean;
+            id: string;
+            name: string;
+            /** @description `client`, `server` or `both`. */
+            side: string;
+            /** @description `loaded`, `skipped`, `failed` or `installed` (not enabled). */
+            state: string;
+            version: string;
+        };
+        /** @description `GET /admin/mods`: every mod in the mods folder and what the check does. */
+        ModsAdminInfo: {
+            /** @description The mods folder has a `state.toml` (the mod system is on). */
+            active: boolean;
+            allow_extra_client_mods: boolean;
+            mods: components["schemas"]["ModStatusInfo"][];
+            /** @description `[mods] require_client_mods` and `allow_extra_client_mods`. */
+            require_client_mods: boolean;
+            /** @description `state.toml` or an installed mod changed since the server started: a restart applies it. */
+            restart_required: boolean;
+        };
         /** @description `POST /admin/motd`. */
         MotdRequest: {
             /** @description Plain text, at most 280 characters, line breaks allowed. Empty clears it. */
@@ -1442,6 +1543,13 @@ export interface components {
              * @description Port the client connects to for login (`[network.login] public_port`, else the bind port).
              */
             login_port: number;
+            /**
+             * @description The client mods a player needs on this server (side `client` or `both`, enabled): the
+             *     launcher compares them with its mods and downloads the missing ones. Absent when the
+             *     server has none (old servers have no such field either). Server-only mods are not
+             *     listed.
+             */
+            mods?: components["schemas"]["ModInfo"][] | null;
             /**
              * @description Message of the day (`[server] motd`, plain text, at most 280 characters); absent when
              *     there is none. The launcher's Home page shows it.
@@ -2652,6 +2760,41 @@ export interface operations {
             };
         };
     };
+    admin_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModsAdminInfo"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     set_motd: {
         parameters: {
             query?: never;
@@ -3653,6 +3796,47 @@ export interface operations {
                 };
             };
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    package: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description mod id */
+                id: string;
+                /** @description `<version>.zip` */
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description the package (application/zip) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": unknown;
+                };
+            };
+            /** @description unchanged */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description no such offered mod or version */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

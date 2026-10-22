@@ -23,6 +23,7 @@
   import CharacterDetail from './pages/CharacterDetail.svelte';
   import Schedule from './pages/Schedule.svelte';
   import Config from './pages/Config.svelte';
+  import Mods from './pages/Mods.svelte';
   import Panel from './pages/Panel.svelte';
 
   interface NavItem {
@@ -37,6 +38,7 @@
     { page: 'instances', label: 'Instances', icon: 'instances' },
     { page: 'accounts', label: 'Accounts', icon: 'accounts' },
     { page: 'characters', label: 'Characters', icon: 'characters' },
+    { page: 'mods', label: 'Mods', icon: 'mods' },
     { page: 'schedule', label: 'Schedule', icon: 'calendar' },
     { page: 'config', label: 'Config', icon: 'settings' },
     ...(features.inventory ? [{ page: 'inventory', label: 'Inventory', icon: 'inventory' as const }] : []),
@@ -144,6 +146,8 @@
               {:else}
                 <Characters />
               {/if}
+            {:else if page === 'mods'}
+              <Mods />
             {:else if page === 'schedule'}
               <Schedule />
             {:else if page === 'config'}

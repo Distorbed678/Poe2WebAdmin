@@ -20,6 +20,8 @@ export type TaskView = Schemas['TaskView'];
 export type TaskBody = Schemas['TaskBody'];
 export type RunView = Schemas['RunView'];
 export type ConfigFile = Schemas['ConfigFile'];
+export type ModsAdminInfo = Schemas['ModsAdminInfo'];
+export type ModStatusInfo = Schemas['ModStatusInfo'];
 
 /** An error response: the HTTP status and the server's `{"error": "..."}` text. */
 export class ApiError extends Error {

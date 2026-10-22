@@ -6,6 +6,9 @@
   import PageHead from '../lib/ui/PageHead.svelte';
   import Status from '../lib/ui/Status.svelte';
   import Modal from '../lib/ui/Modal.svelte';
+  import Icon from '../lib/ui/Icon.svelte';
+  import Empty from '../lib/ui/Empty.svelte';
+  import Spinner from '../lib/ui/Spinner.svelte';
 
   const res = new Resource(async () => {
     const [sessions, instances] = await Promise.all([
@@ -114,18 +117,24 @@
   }
 </script>
 
-<PageHead title="Players online" subtitle="Characters currently in game">
+<PageHead title="Players online" subtitle="Characters currently in game" icon="players">
   <label class="inline">
     <span class="sr-only">Filter players</span>
     <input type="search" placeholder="Filter..." bind:value={filter} />
   </label>
   <Status {res} />
-  <button type="button" onclick={() => res.load()} disabled={res.loading}>Refresh</button>
+  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
+    <Icon name="refresh" size={14} /> Refresh
+  </button>
 </PageHead>
 
 {#if res.data}
   {#if rows.length === 0}
-    <section class="card empty"><p class="muted">{filter ? 'No player matches.' : 'Nobody is in game.'}</p></section>
+    {#if filter}
+      <Empty icon="search" title="No player matches">Nothing matches "{filter}".</Empty>
+    {:else}
+      <Empty icon="players" title="Nobody is in game">Players show up here as soon as they enter an area.</Empty>
+    {/if}
   {:else}
     <div class="table-wrap">
       <table>
@@ -139,11 +148,13 @@
               <td><a href={'#/characters?account=' + encodeURIComponent(s.account)}>{s.account}</a></td>
               <td>{s.area}</td>
               <td class="num">{s.instance ?? '-'}</td>
-              <td class="row-actions">
-                <button type="button" onclick={() => openMute(s.character)}>Mute</button>
-                <button type="button" onclick={() => unmute(s.character)}>Unmute</button>
-                <button type="button" onclick={() => openTransfer(s.character)}>Transfer</button>
-                <button type="button" class="danger" onclick={() => kick(s.character)}>Kick</button>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="btn sm" onclick={() => openMute(s.character)}><Icon name="mute" size={13} /> Mute</button>
+                  <button type="button" class="btn sm" onclick={() => unmute(s.character)}>Unmute</button>
+                  <button type="button" class="btn sm" onclick={() => openTransfer(s.character)}><Icon name="transfer" size={13} /> Transfer</button>
+                  <button type="button" class="btn sm danger" onclick={() => kick(s.character)}><Icon name="kick" size={13} /> Kick</button>
+                </div>
               </td>
             </tr>
           {/each}
@@ -152,29 +163,33 @@
     </div>
   {/if}
 {:else if res.error}
-  <p class="err" role="alert">{res.error}</p>
+  <div class="notice danger" role="alert"><span class="notice-title"><Icon name="alert" size={16} /> {res.error}</span></div>
+{:else}
+  <div class="loading"><Spinner size={20} /> Loading...</div>
 {/if}
 
-<Modal bind:open={muteOpen} title={`Mute ${muteFor ?? ''}`}>
+<Modal bind:open={muteOpen} title={`Mute ${muteFor ?? ''}`} icon="mute">
   <form onsubmit={submitMute}>
     <label class="field">
       <span>Minutes (leave empty to mute until unmuted)</span>
       <input type="number" min="1" step="1" inputmode="numeric" bind:value={minutes} aria-invalid={minutesBad} />
     </label>
     <div class="actions">
-      <button type="button" onclick={() => (muteOpen = false)}>Cancel</button>
-      <button type="submit" class="primary" disabled={minutesBad}>Mute</button>
+      <button type="button" class="btn" onclick={() => (muteOpen = false)}>Cancel</button>
+      <button type="submit" class="btn primary" disabled={minutesBad}>Mute</button>
     </div>
   </form>
 </Modal>
 
-<Modal bind:open={transferOpen} title={`Transfer ${transferFor ?? ''}`}>
+<Modal bind:open={transferOpen} title={`Transfer ${transferFor ?? ''}`} icon="transfer">
   <form onsubmit={submitTransfer}>
-    <fieldset>
-      <legend class="sr-only">Destination</legend>
-      <label class="radio"><input type="radio" bind:group={mode} value="instance" /> Existing instance</label>
-      <label class="radio"><input type="radio" bind:group={mode} value="new" /> New instance</label>
-    </fieldset>
+    <div class="field">
+      <span id="dest">Destination</span>
+      <div class="seg" role="radiogroup" aria-labelledby="dest">
+        <button type="button" role="radio" aria-checked={mode === 'instance'} class:on={mode === 'instance'} onclick={() => (mode = 'instance')}>Existing instance</button>
+        <button type="button" role="radio" aria-checked={mode === 'new'} class:on={mode === 'new'} onclick={() => (mode = 'new')}>New instance</button>
+      </div>
+    </div>
     {#if mode === 'instance'}
       <label class="field">
         <span>Instance</span>
@@ -197,8 +212,8 @@
       </div>
     {/if}
     <div class="actions">
-      <button type="button" onclick={() => (transferOpen = false)}>Cancel</button>
-      <button type="submit" class="primary" disabled={transferInvalid}>Transfer</button>
+      <button type="button" class="btn" onclick={() => (transferOpen = false)}>Cancel</button>
+      <button type="submit" class="btn primary" disabled={transferInvalid}>Transfer</button>
     </div>
   </form>
 </Modal>

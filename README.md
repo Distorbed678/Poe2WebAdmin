@@ -11,7 +11,7 @@ The web admin site of the **Path of Exile 2 client 0.5.5e private server**
 |---|---|
 | Login | `POST /api/v1/login` with `kind: "web"` (12 hour token). Only admin accounts get in |
 | `#/token-login?t=<token>` | One-time sign-in link (the launcher's "Open web admin"): removes the token from the address bar and history, redeems it once with `POST /api/v1/web-token/redeem` for a web session. Expired, used or malformed links land on the login page with a notice |
-| Dashboard | Server info, players online, instance summary, busiest instances. Refreshes every 5 s |
+| Dashboard | **Server control** (Restart and Stop, each behind a confirmation dialog with an optional message for the players and a countdown in seconds; a running countdown with Cancel), server info, players online, instance summary, busiest instances. Refreshes every 5 s |
 | Live logs | WebSocket log stream: level, target prefix and text filters (applied by the server), pause and resume, autoscroll, at most 3000 lines in the DOM, colour by level, reconnect with backoff |
 | Players online | Kick, mute (minutes, or until unmuted), unmute, transfer (to an instance id, or a new area, seed, topology, orientation) |
 | Instances | List, close, create (area, seed, topology, orientation) |
@@ -20,8 +20,14 @@ The web admin site of the **Path of Exile 2 client 0.5.5e private server**
 | Announce | Button in the top bar: a chat line to everyone |
 | Inventory, Passive tree | Stubs ("waiting for the inventory work"), shown only when `VITE_FEATURE_INVENTORY` / `VITE_FEATURE_PASSIVES` is `true` at build time |
 
-Close, kick, disable and role changes ask for confirmation. The token is kept in `sessionStorage` (gone when the tab
+Every page shows a banner under the top bar while a stop or restart is pending (countdown, Cancel), while the server restarts, when it has stopped and when it cannot be reached. The page polls `GET /api/v1/server` and `GET /api/v1/admin/server/shutdown` (every 5 s, every 1.5 s during an outage or countdown); when the server answers again it checks the session (`GET /api/v1/me`; web sessions live in the database and survive a restart), says so in a toast and reloads the dashboard.
+
+Close, kick, disable, role changes, stop and restart ask for confirmation. The token is kept in `sessionStorage` (gone when the tab
 closes); any `401` returns to the login.
+
+## Design
+
+The look follows the launcher (`modules/launcher`, MIT like this repo): the same colour tokens (`src/app.css`, dark by default, `data-theme="light"` for light; `main.ts` sets it from the saved choice or the system preference, the sun/moon button in the top bar toggles and saves it in `localStorage`), the same typography, a top bar with the drifting accent line, a sidebar with icons (an icon rail below 900 px, a bottom tab bar below 640 px), cards, status chips, progress bars, empty states, dialogs and toasts. The small components are copies of the launcher's (`src/lib/ui/`: `Icon`, `Chip`, `Empty`, `Progress`, `Spinner`, `Toasts`, `Modal`, `ConfirmDialog`, `PageHead`, `Switch`), so this repo has no dependency on the launcher's. Animations (page and dialog entrance, toasts, shine on progress bars, the floating empty-state icon) are CSS keyframes and Svelte transitions whose durations go through `ms()` in `src/lib/motion.ts`; under `prefers-reduced-motion` they are switched off.
 
 ## Develop
 
@@ -47,7 +53,7 @@ Feature flags for the stub panels: `VITE_FEATURE_INVENTORY=true VITE_FEATURE_PAS
 | `npm run dev` | Vite dev server with the API proxy |
 | `npm run build` | production build into `dist/` |
 | `npm run check` | `svelte-check` plus `tsc` |
-| `npm test` | vitest unit tests (API client and token handling, log filter and ring buffer, socket reconnect, routes, formatting) |
+| `npm test` | vitest unit tests (API client and token handling, log filter and ring buffer, socket reconnect, routes, formatting, theme, motion, the server link state machine and the shutdown form's countdown parser) |
 | `npm run gen:api` | regenerate the API types, see below |
 
 ## Build and serve with poe-server
@@ -88,12 +94,13 @@ Regenerate after the API changes, fix whatever `npm run check` then reports, and
 
 ```
 src/
-  main.ts, App.svelte, app.css      shell, navigation, announce dialog, global styles
+  main.ts, App.svelte, app.css      shell (top bar, sidebar, banner), announce dialog, the one stylesheet
   pages/                            one component per page
   lib/api/                          schema.d.ts (generated), client.ts, token.ts
   lib/logs/                         log filter + ring buffer + message parsing (ring.ts), reconnecting WebSocket (socket.ts)
-  lib/*.svelte.ts                   auth, router, polling Resource, toasts and confirmations (Svelte runes)
-  lib/ui/                           Modal, ConfirmDialog, Toasts, small shared components
+  lib/*.svelte.ts                   auth, router, theme, polling Resource, toasts and confirmations, the server link (Svelte runes)
+  lib/serverLink.ts, shutdown.ts    the reconnect state machine (pure), the countdown field's limits
+  lib/ui/                           Icon, Chip, Empty, Progress, Modal, ConfirmDialog, Toasts, ServerControl, ShutdownBanner, ...
 scripts/gen-api.mjs                 the gen:api script
 ```
 

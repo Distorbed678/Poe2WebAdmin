@@ -268,6 +268,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/server/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancels a pending stop or restart while its countdown runs. */
+        post: operations["server_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/server/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restarts the server: like stop, then the server starts again (`[server] restart_mode`:
+         *     the process starts itself, or exits with code 75 for a supervisor). Web sessions stay valid.
+         */
+        post: operations["server_restart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/server/shutdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The pending stop or restart, if any (with the seconds left). */
+        get: operations["server_shutdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/server/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stops the server: the players are warned (`delay_secs`, `message`), disconnected, and the
+         *     process exits with code 0. Answers 202 at once; the countdown runs on the server.
+         */
+        post: operations["server_stop"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/sessions": {
         parameters: {
             query?: never;
@@ -665,6 +739,26 @@ export interface components {
             new_password: string;
             old_password: string;
         };
+        /** @description A shutdown that was requested and has not happened yet. */
+        PendingShutdown: {
+            action: components["schemas"]["ShutdownKind"];
+            /** @description `false` once the final announcement is out: it can no longer be cancelled. */
+            cancellable: boolean;
+            /**
+             * Format: int32
+             * @description The countdown the request asked for.
+             */
+            delay_secs: number;
+            /** @description The admin's message to the players. */
+            message?: string | null;
+            /**
+             * Format: int64
+             * @description Seconds until the players are disconnected (0 once the final announcement is out).
+             */
+            remaining_secs: number;
+            /** @description The admin account that asked. */
+            requested_by: string;
+        };
         /** @description `POST /register`. */
         RegisterRequest: {
             /** @description Plain text, at least 8 characters. Use HTTPS outside the local machine. */
@@ -704,6 +798,26 @@ export interface components {
             uptime_secs: number;
             /** @description The game client version this server speaks. */
             version: string;
+        };
+        /**
+         * @description What the process does once the countdown is over.
+         * @enum {string}
+         */
+        ShutdownKind: "stop" | "restart";
+        /** @description `POST /admin/server/stop` and `/admin/server/restart` (the body is optional). */
+        ShutdownRequest: {
+            /**
+             * Format: int32
+             * @description Countdown in seconds (0..=3600, default 0): announced to the players in game, then the
+             *     server shuts down.
+             */
+            delay_secs?: number | null;
+            /** @description Added to every announcement (at most 200 characters). */
+            message?: string | null;
+        };
+        /** @description `GET /admin/server/shutdown`. */
+        ShutdownStatus: {
+            pending?: null | components["schemas"]["PendingShutdown"];
         };
         /**
          * @description `POST /admin/players/{name}/transfer`: give `instance`, or `area` (with the optional
@@ -1501,6 +1615,208 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    server_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandResult"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description nothing pending */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description too late: the players were already disconnected */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    server_restart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description optional */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShutdownRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingShutdown"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description a shutdown is already pending */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    server_shutdown: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShutdownStatus"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    server_stop: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description optional */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShutdownRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingShutdown"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description a shutdown is already pending */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

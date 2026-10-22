@@ -4,6 +4,10 @@
   import { features } from '../lib/features';
   import PageHead from '../lib/ui/PageHead.svelte';
   import Status from '../lib/ui/Status.svelte';
+  import Icon from '../lib/ui/Icon.svelte';
+  import Chip from '../lib/ui/Chip.svelte';
+  import Empty from '../lib/ui/Empty.svelte';
+  import Spinner from '../lib/ui/Spinner.svelte';
 
   let { id }: { id: string } = $props();
 
@@ -15,15 +19,15 @@
   const c = $derived(res.data);
 </script>
 
-<PageHead title={c ? c.name : `Character ${id}`} subtitle="Character detail">
+<PageHead title={c ? c.name : `Character ${id}`} subtitle="Character detail" icon="characters">
   <Status {res} />
-  <a class="btn" href={c?.account ? '#/characters?account=' + encodeURIComponent(c.account) : '#/characters'}>Back to list</a>
+  <a class="btn sm" href={c?.account ? '#/characters?account=' + encodeURIComponent(c.account) : '#/characters'}>Back to list</a>
 </PageHead>
 
 {#if c}
-  <div class="two-col">
+  <div class="two">
     <section class="card">
-      <h2>Character</h2>
+      <div class="card-head"><span class="head-icon"><Icon name="characters" size={16} /></span><h2>Character</h2></div>
       <dl class="kv">
         <dt>Id</dt><dd>{c.id}</dd>
         <dt>Name</dt><dd>{c.name}</dd>
@@ -32,11 +36,11 @@
         <dt>Class id</dt><dd>{c.class_id}</dd>
         <dt>Level</dt><dd>{c.level}</dd>
         <dt>Experience</dt><dd>{c.experience.toLocaleString()}</dd>
-        <dt>Status</dt><dd>{#if c.online}<span class="badge ok">online</span>{:else}offline{/if}</dd>
+        <dt>Status</dt><dd>{#if c.online}<Chip tone="ok" dot pulse>online</Chip>{:else}<Chip>offline</Chip>{/if}</dd>
       </dl>
     </section>
     <section class="card">
-      <h2>Location</h2>
+      <div class="card-head"><span class="head-icon"><Icon name="instances" size={16} /></span><h2>Location</h2></div>
       <dl class="kv">
         <dt>Area</dt><dd>{c.area}</dd>
         <dt>Start state</dt><dd>{c.start_state}</dd>
@@ -51,13 +55,13 @@
     </section>
   </div>
   {#if features.inventory}
-    <section class="card empty"><h2>Inventory</h2><p class="muted">Waiting for the inventory work.</p></section>
+    <div class="section"><Empty icon="inventory" title="Inventory">Waiting for the inventory work.</Empty></div>
   {/if}
   {#if features.passives}
-    <section class="card empty"><h2>Passive tree</h2><p class="muted">Waiting for the inventory work.</p></section>
+    <div class="section"><Empty icon="passives" title="Passive tree">Waiting for the inventory work.</Empty></div>
   {/if}
 {:else if res.error}
-  <p class="err" role="alert">{res.error}</p>
+  <div class="notice danger" role="alert"><span class="notice-title"><Icon name="alert" size={16} /> {res.error}</span></div>
 {:else}
-  <p class="muted">Loading...</p>
+  <div class="loading"><Spinner size={20} /> Loading...</div>
 {/if}

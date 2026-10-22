@@ -6,6 +6,10 @@
   import { formatUnix } from '../lib/format';
   import PageHead from '../lib/ui/PageHead.svelte';
   import Status from '../lib/ui/Status.svelte';
+  import Icon from '../lib/ui/Icon.svelte';
+  import Chip from '../lib/ui/Chip.svelte';
+  import Empty from '../lib/ui/Empty.svelte';
+  import Spinner from '../lib/ui/Spinner.svelte';
 
   const res = new Resource(() => unwrap(api.GET('/api/v1/admin/accounts')));
   $effect(() => res.start());
@@ -62,62 +66,75 @@
   }
 </script>
 
-<PageHead title="Accounts" subtitle="Every account of this cluster">
+<PageHead title="Accounts" subtitle="Every account of this cluster" icon="accounts">
   <label class="inline">
     <span class="sr-only">Filter accounts</span>
     <input type="search" placeholder="Filter..." bind:value={filter} />
   </label>
   <Status {res} />
-  <button type="button" onclick={() => res.load()} disabled={res.loading}>Refresh</button>
+  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
+    <Icon name="refresh" size={14} /> Refresh
+  </button>
 </PageHead>
 
 {#if res.data}
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="num">Id</th><th>Username</th><th>Role</th><th>State</th><th>Created</th><th>Last login</th>
-          <th class="actions-col">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each rows as a (a.id)}
-          {@const self = a.username === auth.account?.username}
+  {#if res.data.length === 0}
+    <Empty icon="accounts" title="No accounts">Create one with <code>poe-server account create</code>.</Empty>
+  {:else if rows.length === 0}
+    <Empty icon="search" title="No account matches">Nothing matches "{filter}".</Empty>
+  {:else}
+    <div class="table-wrap">
+      <table>
+        <thead>
           <tr>
-            <td class="num">{a.id}</td>
-            <td>
-              <a href={'#/characters?account=' + encodeURIComponent(a.username)}>{a.username}</a>
-              {#if self}<span class="badge">you</span>{/if}
-              {#if !a.has_password}<span class="badge" title="Dev machine-hash account: no password login">no password</span>{/if}
-            </td>
-            <td>
-              <select
-                aria-label={`Role of ${a.username}`}
-                value={a.role}
-                disabled={self}
-                title={self ? 'You cannot change your own role' : undefined}
-                onchange={(e) => setRole(a, e.currentTarget.value)}
-              >
-                <option value="player">player</option>
-                <option value="admin">admin</option>
-              </select>
-            </td>
-            <td>{#if a.disabled}<span class="badge bad">disabled</span>{:else}<span class="badge ok">active</span>{/if}</td>
-            <td>{formatUnix(a.created_at)}</td>
-            <td>{formatUnix(a.last_login)}</td>
-            <td class="row-actions">
-              {#if a.disabled}
-                <button type="button" onclick={() => enable(a)}>Enable</button>
-              {:else}
-                <button type="button" class="danger" disabled={self} onclick={() => disable(a)}>Disable</button>
-              {/if}
-            </td>
+            <th class="num">Id</th><th>Username</th><th>Role</th><th>State</th><th>Created</th><th>Last login</th>
+            <th class="actions-col">Actions</th>
           </tr>
-        {/each}
-      </tbody>
-    </table>
-  </div>
-  {#if rows.length === 0}<p class="muted">No account matches.</p>{/if}
+        </thead>
+        <tbody>
+          {#each rows as a (a.id)}
+            {@const self = a.username === auth.account?.username}
+            <tr>
+              <td class="num">{a.id}</td>
+              <td>
+                <span class="name-cell">
+                  <a href={'#/characters?account=' + encodeURIComponent(a.username)}>{a.username}</a>
+                  {#if self}<Chip tone="accent">you</Chip>{/if}
+                  {#if !a.has_password}<Chip title="Dev machine-hash account: no password login">no password</Chip>{/if}
+                </span>
+              </td>
+              <td>
+                <select
+                  aria-label={`Role of ${a.username}`}
+                  value={a.role}
+                  disabled={self}
+                  title={self ? 'You cannot change your own role' : undefined}
+                  onchange={(e) => setRole(a, e.currentTarget.value)}
+                >
+                  <option value="player">player</option>
+                  <option value="admin">admin</option>
+                </select>
+              </td>
+              <td>{#if a.disabled}<Chip tone="bad">disabled</Chip>{:else}<Chip tone="ok" dot>active</Chip>{/if}</td>
+              <td>{formatUnix(a.created_at)}</td>
+              <td>{formatUnix(a.last_login)}</td>
+              <td>
+                <div class="row-actions">
+                  {#if a.disabled}
+                    <button type="button" class="btn sm" onclick={() => enable(a)}>Enable</button>
+                  {:else}
+                    <button type="button" class="btn sm danger" disabled={self} onclick={() => disable(a)}>Disable</button>
+                  {/if}
+                </div>
+              </td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    </div>
+  {/if}
 {:else if res.error}
-  <p class="err" role="alert">{res.error}</p>
+  <div class="notice danger" role="alert"><span class="notice-title"><Icon name="alert" size={16} /> {res.error}</span></div>
+{:else}
+  <div class="loading"><Spinner size={20} /> Loading...</div>
 {/if}

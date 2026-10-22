@@ -4,6 +4,10 @@
   import { router, hrefFor } from '../lib/router.svelte';
   import PageHead from '../lib/ui/PageHead.svelte';
   import Status from '../lib/ui/Status.svelte';
+  import Icon from '../lib/ui/Icon.svelte';
+  import Chip from '../lib/ui/Chip.svelte';
+  import Empty from '../lib/ui/Empty.svelte';
+  import Spinner from '../lib/ui/Spinner.svelte';
 
   // The account filter lives in the URL (#/characters?account=bob) so the other pages can link to it.
   const account = $derived(router.route.query.get('account') ?? '');
@@ -25,7 +29,7 @@
   }
 </script>
 
-<PageHead title="Characters" subtitle={account ? `Account ${account}` : 'All accounts'}>
+<PageHead title="Characters" subtitle={account ? `Account ${account}` : 'All accounts'} icon="characters">
   <label class="inline">
     <span>Account</span>
     <select value={account} onchange={(e) => choose(e.currentTarget.value)}>
@@ -39,12 +43,14 @@
     </select>
   </label>
   <Status {res} />
-  <button type="button" onclick={() => res.load()} disabled={res.loading}>Refresh</button>
+  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
+    <Icon name="refresh" size={14} /> Refresh
+  </button>
 </PageHead>
 
 {#if res.data}
   {#if res.data.length === 0}
-    <section class="card empty"><p class="muted">No characters.</p></section>
+    <Empty icon="characters" title="No characters">{account ? `${account} has no characters yet.` : 'No account has created a character yet.'}</Empty>
   {:else}
     <div class="table-wrap">
       <table>
@@ -60,7 +66,7 @@
               <td>{c.league}</td>
               <td class="num">{c.level}</td>
               <td>{c.area}</td>
-              <td>{#if c.online}<span class="badge ok">online</span>{:else}<span class="muted">offline</span>{/if}</td>
+              <td>{#if c.online}<Chip tone="ok" dot pulse>online</Chip>{:else}<span class="muted">offline</span>{/if}</td>
             </tr>
           {/each}
         </tbody>
@@ -68,5 +74,7 @@
     </div>
   {/if}
 {:else if res.error}
-  <p class="err" role="alert">{res.error}</p>
+  <div class="notice danger" role="alert"><span class="notice-title"><Icon name="alert" size={16} /> {res.error}</span></div>
+{:else}
+  <div class="loading"><Spinner size={20} /> Loading...</div>
 {/if}

@@ -11,6 +11,8 @@ export type ServerInfo = Schemas['ServerInfo'];
 export type LoginResponse = Schemas['LoginResponse'];
 export type LogEvent = Schemas['LogEvent'];
 export type LogLevel = Schemas['LogLevel'];
+export type PendingShutdown = Schemas['PendingShutdown'];
+export type ShutdownKind = Schemas['ShutdownKind'];
 
 /** An error response: the HTTP status and the server's `{"error": "..."}` text. */
 export class ApiError extends Error {

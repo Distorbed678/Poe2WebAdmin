@@ -5,6 +5,8 @@
   import { LEVELS, LogStore, logsWsUrl, matchesFilter, type LogFilter } from '../lib/logs/ring';
   import { LogSocket, type SocketState } from '../lib/logs/socket';
   import PageHead from '../lib/ui/PageHead.svelte';
+  import Icon from '../lib/ui/Icon.svelte';
+  import Chip from '../lib/ui/Chip.svelte';
 
   const CAP = 3000;
   const store = new LogStore(CAP);
@@ -135,9 +137,11 @@
       .join(' ');
 </script>
 
-<PageHead title="Live logs" subtitle="Server log events, newest at the bottom">
-  <span class="conn {conn}" role="status">
-    {conn}{retryInfo ? ` (${retryInfo})` : ''}
+<PageHead title="Live logs" subtitle="Server log events, newest at the bottom" icon="logs">
+  <span class="conn" role="status">
+    <Chip tone={conn === 'open' ? 'ok' : conn === 'closed' ? 'bad' : 'warn'} dot pulse={conn !== 'closed'}>
+      {conn}{retryInfo ? ` (${retryInfo})` : ''}
+    </Chip>
   </span>
 </PageHead>
 
@@ -156,14 +160,17 @@
     <span>Search</span>
     <input type="search" placeholder="message or field text" bind:value={text} />
   </label>
-  <button type="button" onclick={togglePause} aria-pressed={paused}>
+  <button type="button" class="btn sm" onclick={togglePause} aria-pressed={paused}>
+    <Icon name={paused ? 'play' : 'pause'} size={13} />
     {paused ? `Resume${pending ? ` (${pending} new)` : ''}` : 'Pause'}
   </button>
   <label class="check"><input type="checkbox" bind:checked={autoscroll} /> Autoscroll</label>
-  <button type="button" onclick={clearView}>Clear</button>
+  <button type="button" class="btn sm" onclick={clearView}><Icon name="trash" size={13} /> Clear</button>
 </form>
 
-{#if notice}<p class="notice" role="status">{notice}</p>{/if}
+{#if notice}
+  <div class="notice" role="status"><span class="notice-title"><Icon name="info" size={16} /> {notice}</span></div>
+{/if}
 
 <!-- A scrollable region must be reachable by keyboard to scroll it. -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->

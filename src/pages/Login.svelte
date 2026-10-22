@@ -1,6 +1,9 @@
 <script lang="ts">
   import { auth } from '../lib/auth.svelte';
   import Toasts from '../lib/ui/Toasts.svelte';
+  import Icon from '../lib/ui/Icon.svelte';
+  import Spinner from '../lib/ui/Spinner.svelte';
+  import ThemeToggle from '../lib/ui/ThemeToggle.svelte';
 
   let username = $state('');
   let password = $state('');
@@ -23,12 +26,22 @@
 </script>
 
 <div class="login-wrap">
+  <span class="theme-corner" style="position: absolute; top: 14px; right: 14px"><ThemeToggle /></span>
   <form class="card login" onsubmit={submit}>
-    <h1>PoE2 server admin</h1>
-    <p class="muted">Sign in with an admin account.</p>
-    {#if auth.pending}<p class="notice" role="status">Signing you in...</p>{/if}
-    {#if auth.notice}<p class="notice" role="status">{auth.notice}</p>{/if}
-    {#if error}<p class="err" role="alert">{error}</p>{/if}
+    <div class="login-brand">
+      <img src="./logo.png" alt="" width="72" height="72" />
+      <h1>PoE2 <b>Admin</b></h1>
+      <p class="muted">Sign in with an admin account.</p>
+    </div>
+    {#if auth.pending}
+      <div class="notice info" role="status"><span class="notice-title"><Spinner size={14} /> Signing you in...</span></div>
+    {/if}
+    {#if auth.notice}
+      <div class="notice" role="status"><span class="notice-title"><Icon name="info" size={16} /> {auth.notice}</span></div>
+    {/if}
+    {#if error}
+      <div class="notice danger" role="alert"><span class="notice-title"><Icon name="alert" size={16} /> {error}</span></div>
+    {/if}
     <label class="field">
       <span>Username</span>
       <!-- svelte-ignore a11y_autofocus -->
@@ -38,8 +51,8 @@
       <span>Password</span>
       <input name="password" type="password" autocomplete="current-password" required bind:value={password} />
     </label>
-    <button type="submit" class="primary" disabled={busy || !username || !password}>
-      {busy ? 'Signing in...' : 'Sign in'}
+    <button type="submit" class="btn primary lg" disabled={busy || !username || !password}>
+      {#if busy}<Spinner size={14} /> Signing in...{:else}Sign in{/if}
     </button>
   </form>
 </div>

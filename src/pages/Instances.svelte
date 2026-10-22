@@ -6,6 +6,10 @@
   import PageHead from '../lib/ui/PageHead.svelte';
   import Status from '../lib/ui/Status.svelte';
   import Modal from '../lib/ui/Modal.svelte';
+  import Icon from '../lib/ui/Icon.svelte';
+  import Chip from '../lib/ui/Chip.svelte';
+  import Empty from '../lib/ui/Empty.svelte';
+  import Spinner from '../lib/ui/Spinner.svelte';
 
   const res = new Resource(() => unwrap(api.GET('/api/v1/admin/instances')));
   $effect(() => res.start(5000));
@@ -61,15 +65,20 @@
   }
 </script>
 
-<PageHead title="Instances" subtitle="Running area instances">
+<PageHead title="Instances" subtitle="Running area instances" icon="instances">
   <Status {res} />
-  <button type="button" onclick={() => res.load()} disabled={res.loading}>Refresh</button>
-  <button type="button" class="primary" onclick={openCreate}>Create instance</button>
+  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
+    <Icon name="refresh" size={14} /> Refresh
+  </button>
+  <button type="button" class="btn sm primary" onclick={openCreate}><Icon name="plus" size={14} /> Create instance</button>
 </PageHead>
 
 {#if res.data}
   {#if res.data.length === 0}
-    <section class="card empty"><p class="muted">No instances.</p></section>
+    <Empty icon="instances" title="No instances">
+      Instances appear when a player enters an area, or create one here.
+      {#snippet action()}<button type="button" class="btn primary" onclick={openCreate}><Icon name="plus" size={16} /> Create instance</button>{/snippet}
+    </Empty>
   {:else}
     <div class="table-wrap">
       <table>
@@ -83,18 +92,20 @@
           {#each res.data as i (i.id)}
             <tr>
               <td class="num">{i.id}</td>
-              <td>{i.area}{#if i.persistent}<span class="badge">persistent</span>{/if}</td>
+              <td><span class="name-cell">{i.area}{#if i.persistent}<Chip>persistent</Chip>{/if}</span></td>
               <td class="num">{i.seed ?? '-'}</td>
               <td class="num">{i.topology ?? '-'}</td>
               <td class="num">{i.orientation ?? '-'}</td>
               <td>
-                {#if i.players.length}{i.players.join(', ')}{:else}
+                {#if i.players.length}<Chip tone="ok" dot>{i.players.length}</Chip> {i.players.join(', ')}{:else}
                   <span class="muted">empty{i.empty_for_secs != null ? ` for ${i.empty_for_secs}s` : ''}</span>
                 {/if}
               </td>
               <td>{formatAge(i.created_unix_ms)}</td>
-              <td class="row-actions">
-                <button type="button" class="danger" onclick={() => close(i.id, i.players.length)}>Close</button>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="btn sm danger" onclick={() => close(i.id, i.players.length)}>Close</button>
+                </div>
               </td>
             </tr>
           {/each}
@@ -103,10 +114,12 @@
     </div>
   {/if}
 {:else if res.error}
-  <p class="err" role="alert">{res.error}</p>
+  <div class="notice danger" role="alert"><span class="notice-title"><Icon name="alert" size={16} /> {res.error}</span></div>
+{:else}
+  <div class="loading"><Spinner size={20} /> Loading...</div>
 {/if}
 
-<Modal bind:open={createOpen} title="Create instance">
+<Modal bind:open={createOpen} title="Create instance" icon="instances">
   <form onsubmit={create}>
     <label class="field">
       <span>Area (<code>WorldAreas.Id</code>, e.g. G1_1)</span>
@@ -118,8 +131,8 @@
       <label class="field"><span>Orientation 0-8</span><input type="number" min="0" max="8" bind:value={orientation} placeholder="client's" /></label>
     </div>
     <div class="actions">
-      <button type="button" onclick={() => (createOpen = false)}>Cancel</button>
-      <button type="submit" class="primary" disabled={area.trim() === '' || bad}>Create</button>
+      <button type="button" class="btn" onclick={() => (createOpen = false)}>Cancel</button>
+      <button type="submit" class="btn primary" disabled={area.trim() === '' || bad}>Create</button>
     </div>
   </form>
 </Modal>

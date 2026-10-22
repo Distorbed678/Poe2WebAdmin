@@ -89,6 +89,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/bans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The bans, newest first (history included unless `?active=true`). */
+        get: operations["list_bans"];
+        put?: never;
+        /**
+         * Bans an account (its logins are refused, its tokens revoked and its sessions ended) or an IP
+         *     address. `400` for an admin, yourself, your own address, a bad address, reason or duration;
+         *     `404` for an unknown account; `409` when the target already has an active ban.
+         */
+        post: operations["create_ban"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/bans/{id}/lift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lifts a ban that is in force. `404` unknown ban, `409` already over. */
+        post: operations["lift_ban"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/characters": {
         parameters: {
             query?: never;
@@ -117,6 +156,122 @@ export interface paths {
         get: operations["character"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The server's config file, with the form schema. */
+        get: operations["get_config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/config/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The saved previous versions of the config file, newest first. */
+        get: operations["list_config_backups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/config/backups/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The text of one backup, to load into the editor. */
+        get: operations["get_config_backup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/config/fields": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Writes form values into config text (comments and layout stay) so the editor can show the
+         *     result and its diff. Only the keys of the form are accepted; each value is checked against
+         *     its type and bounds. Nothing is saved. With an empty `set` it only reads the form values out
+         *     of the text (`parse_error` when it does not parse): the editor uses that to fill the form
+         *     from text typed in the raw editor.
+         */
+        post: operations["apply_config_fields"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/config/save": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Saves the text as the server's config file: validates it, keeps a backup of the previous
+         *     file and replaces it atomically. `400` with the line and column for an invalid config, `403`
+         *     when `[web] config_editor` is off, `409` when the file changed since `base_revision`. With
+         *     `restart` the server then restarts like `POST /admin/server/restart`.
+         */
+        post: operations["save_config"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/config/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Parses the text exactly as the server would at start and reports the first problem with its
+         *     line and column, or the warnings of a valid config. Nothing is saved.
+         */
+        post: operations["validate_config"];
         delete?: never;
         options?: never;
         head?: never;
@@ -200,6 +355,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Players, instances, simulation frame time, memory and CPU of the server over time, sampled
+         *     every `[metrics] interval_secs` and kept in memory for `[metrics] retention_hours`.
+         */
+        get: operations["get_metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/motd": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sets the message of the day. It takes effect at once (`GET /server`, the launcher's Home
+         *     page) and is written into the config file the server runs from (with a backup, like the
+         *     config editor); when that is not possible the message still applies until a restart and
+         *     `persisted` is false.
+         */
+        post: operations["set_motd"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/players/{name}/kick": {
         parameters: {
             query?: never;
@@ -262,6 +459,142 @@ export interface paths {
         put?: never;
         /** Lets a muted player chat again. */
         post: operations["unmute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The time zone, and every task with its next run and last result. */
+        get: operations["get_schedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Checks a schedule and lists its next runs, for the form. `400` names the problem. */
+        post: operations["preview_schedule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates a task. `400` names what is wrong with the schedule or the options. */
+        post: operations["create_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replaces a task's name, action, schedule and enabled flag. */
+        post: operations["update_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule/tasks/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deletes a task and its history. */
+        post: operations["delete_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule/tasks/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turns a task off; it keeps its history. */
+        post: operations["disable_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule/tasks/{id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Turns a task on; its next run is worked out from now. */
+        post: operations["enable_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/schedule/tasks/{id}/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A task's history, newest first (at most 100). */
+        get: operations["list_task_runs"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -349,7 +682,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Players in game now. */
+        /**
+         * Players in game now, with their account, character level and class, where they are, since
+         *     when, their address and whether they are muted. (The address is only in the admin API.)
+         */
         get: operations["sessions"];
         put?: never;
         post?: never;
@@ -559,6 +895,72 @@ export interface components {
         AnnounceRequest: {
             message: string;
         };
+        /** @description `GET /admin/config/backups/{name}`. */
+        BackupContent: {
+            /** @description The text (token-like values hidden). */
+            content: string;
+            name: string;
+        };
+        /** @description One backup. */
+        BackupInfo: {
+            /**
+             * Format: int64
+             * @description Unix seconds.
+             */
+            modified: number;
+            name: string;
+            /** Format: int64 */
+            size: number;
+        };
+        /** @description `POST /admin/bans`: give `account` or `ip`, and optionally how long. */
+        BanRequest: {
+            /** @description Account name to ban. */
+            account?: string | null;
+            /**
+             * Format: int64
+             * @description Ban length in seconds (60 to 10 years). Neither this nor `expires_at`: permanent.
+             */
+            duration_secs?: number | null;
+            /**
+             * Format: int64
+             * @description End of the ban, unix seconds in the future (instead of `duration_secs`).
+             */
+            expires_at?: number | null;
+            /** @description IPv4 or IPv6 address to ban. */
+            ip?: string | null;
+            /** @description Shown to the player (at most 200 characters). */
+            reason?: string | null;
+        };
+        /** @description A ban, active or not. */
+        BanView: {
+            /** @description The banned account's name (account bans). */
+            account?: string | null;
+            /** Format: int32 */
+            account_id?: number | null;
+            /**
+             * Format: int64
+             * @description Unix seconds.
+             */
+            created_at: number;
+            created_by: string;
+            /**
+             * Format: int64
+             * @description Unix seconds; absent: permanent.
+             */
+            expires_at?: number | null;
+            /** Format: int32 */
+            id: number;
+            /** @description The banned address (IP bans). */
+            ip?: string | null;
+            /** @description `account` or `ip`. */
+            kind: string;
+            /** Format: int64 */
+            lifted_at?: number | null;
+            lifted_by?: string | null;
+            reason: string;
+            /** @description `active`, `expired` or `lifted`. */
+            status: string;
+        };
         CharacterInfo: {
             /** @description The owning account's name, when it is known. */
             account?: string | null;
@@ -588,6 +990,56 @@ export interface components {
         CommandResult: {
             message: string;
         };
+        /** @description One key of the form. */
+        ConfigField: {
+            /** @description The value that applies when the key is absent. */
+            default: Record<string, never>;
+            help: string;
+            key: string;
+            /** @description `bool`, `int`, `text`, `choice` or `list`. */
+            kind: string;
+            label: string;
+            /** Format: int64 */
+            max?: number | null;
+            max_len?: number | null;
+            /** Format: int64 */
+            min?: number | null;
+            multiline: boolean;
+            options: string[];
+            /** @description `section.key`. */
+            path: string;
+            /** @description Whether a restart is needed for a change to apply. */
+            restart: boolean;
+            section: string;
+        };
+        /** @description `GET /admin/config`: the file, its form schema and its warnings. */
+        ConfigFile: {
+            /** @description Where backups go. */
+            backup_dir: string;
+            /** @description The file's text (token-like values hidden). */
+            content: string;
+            /** @description `[web] config_editor`: whether saving is allowed. */
+            editable: boolean;
+            /** @description The keys the form offers. */
+            fields: components["schemas"]["ConfigField"][];
+            /** @description Things to know about this file. */
+            notices: string[];
+            /** @description Where the file is. */
+            path: string;
+            /** @description Identifies this version of the file: send it back as `base_revision` when saving. */
+            revision: string;
+            /** @description The values of the form's keys as the file has them (absent: the default applies). */
+            values: Record<string, never>;
+            /** @description Dangerous settings in the file now (`Config::security_warnings`). */
+            warnings: string[];
+        };
+        /** @description A problem in the text. */
+        ConfigProblem: {
+            column?: number | null;
+            /** @description 1-based, when known. */
+            line?: number | null;
+            message: string;
+        };
         CreatedInstance: {
             /** Format: int32 */
             id: number;
@@ -595,6 +1047,25 @@ export interface components {
         /** @description Body of every error response. */
         ErrorBody: {
             error: string;
+        };
+        /** @description `POST /admin/config/fields`: form values applied to a text. */
+        FieldsRequest: {
+            /** @description The text to change (the editor's current content). */
+            content: string;
+            /** @description `section.key` to the new value; `null` removes the key (the default applies again). */
+            set: {
+                [key: string]: Record<string, never>;
+            };
+        };
+        FieldsResponse: {
+            /** @description The text with the values written in; comments and layout are kept. */
+            content: string;
+            parse_error?: null | components["schemas"]["ConfigProblem"];
+            /**
+             * @description The form values of that text (as `GET /admin/config` reports them), so the form can be
+             *     filled from any text; empty when the text does not parse.
+             */
+            values: Record<string, never>;
         };
         InstanceView: {
             area: string;
@@ -697,6 +1168,83 @@ export interface components {
             /** @description 64 hex characters: send as `Authorization: Bearer <token>`. Shown only once. */
             token: string;
         };
+        /** @description One sample. */
+        MetricsPoint: {
+            /**
+             * Format: float
+             * @description CPU use of the server process, percent of one core; absent for the first sample and on
+             *     platforms where it is unknown.
+             */
+            cpu_pct?: number | null;
+            /**
+             * Format: int32
+             * @description Instances that exist.
+             */
+            instances: number;
+            /**
+             * Format: int32
+             * @description Instances with at least one player.
+             */
+            occupied: number;
+            /**
+             * Format: int32
+             * @description Players in game.
+             */
+            players: number;
+            /**
+             * Format: int64
+             * @description Resident memory of the server process in bytes (0: unknown on this platform).
+             */
+            rss_bytes: number;
+            /**
+             * Format: int64
+             * @description Unix milliseconds.
+             */
+            t: number;
+            /** Format: int32 */
+            tick_avg_us: number;
+            /**
+             * Format: int32
+             * @description Simulation frames in the interval, and their mean and longest time in microseconds.
+             */
+            tick_count: number;
+            /** Format: int32 */
+            tick_max_us: number;
+        };
+        MetricsResponse: {
+            /** @description `[metrics] enabled`; when off there are no samples. */
+            enabled: boolean;
+            /**
+             * Format: int64
+             * @description Seconds between samples.
+             */
+            interval_secs: number;
+            /**
+             * Format: int64
+             * @description The server's clock, unix milliseconds.
+             */
+            now: number;
+            /**
+             * Format: int64
+             * @description Seconds of history kept.
+             */
+            retention_secs: number;
+            /** @description Oldest first. */
+            samples: components["schemas"]["MetricsPoint"][];
+        };
+        /** @description `POST /admin/motd`. */
+        MotdRequest: {
+            /** @description Plain text, at most 280 characters, line breaks allowed. Empty clears it. */
+            motd: string;
+        };
+        MotdResponse: {
+            /** @description The message now in effect (trimmed). */
+            motd: string;
+            /** @description Why it was not written (config editor off, no file, read-only file, ...). */
+            note?: string | null;
+            /** @description Whether it was also written into the config file, so it survives a restart. */
+            persisted: boolean;
+        };
         /** @description `POST /admin/players/{name}/mute`. */
         MuteRequest: {
             /**
@@ -727,11 +1275,32 @@ export interface components {
         };
         OnlinePlayerInfo: {
             account: string;
+            /** Format: int32 */
+            account_id: number;
             /** @description `WorldAreas.Id`. */
             area: string;
             character: string;
+            /**
+             * Format: int32
+             * @description `Characters.IntegerId` of the character's class.
+             */
+            class_id?: number | null;
+            /**
+             * Format: int64
+             * @description When the session started (unix seconds).
+             */
+            connected_at: number;
             /** Format: int32 */
             instance?: number | null;
+            /** @description The client's address (admin API only), when known. */
+            ip?: string | null;
+            /**
+             * Format: int32
+             * @description Level of the character, when it is in the database.
+             */
+            level?: number | null;
+            /** @description The character cannot chat. */
+            muted: boolean;
         };
         /** @description `POST /password`. */
         PasswordRequest: {
@@ -759,6 +1328,17 @@ export interface components {
             /** @description The admin account that asked. */
             requested_by: string;
         };
+        /** @description `POST /admin/schedule/preview`. */
+        PreviewRequest: {
+            schedule: components["schemas"]["Schedule"];
+        };
+        PreviewResponse: {
+            /** @description The schedule in words. */
+            description: string;
+            /** @description The next runs (unix seconds), up to 5. */
+            next_runs: number[];
+            timezone: string;
+        };
         /** @description `POST /register`. */
         RegisterRequest: {
             /** @description Plain text, at least 8 characters. Use HTTPS outside the local machine. */
@@ -770,6 +1350,79 @@ export interface components {
         RoleRequest: {
             /** @description `player` or `admin`. */
             role: string;
+        };
+        /** @description One entry of a task's history. */
+        RunView: {
+            /**
+             * Format: int64
+             * @description When the run was scheduled for (unix seconds).
+             */
+            due_at: number;
+            /** Format: int32 */
+            id: number;
+            message: string;
+            /** Format: int64 */
+            started_at: number;
+            /** @description `ok`, `failed`, `skipped` or `missed`. */
+            status: string;
+        };
+        /** @description `POST /admin/config/save`. */
+        SaveRequest: {
+            /** @description The `revision` of the file the editor opened. */
+            base_revision: string;
+            /** @description The whole new text. */
+            content: string;
+            restart?: null | components["schemas"]["ShutdownRequest"];
+        };
+        SaveResponse: {
+            /** @description File name of the backup of the previous version. */
+            backup?: string | null;
+            /** @description `false`: the text equals the file, nothing was written. */
+            changed: boolean;
+            /** @description Lines that differ from the previous version. */
+            lines_changed: number;
+            restart?: null | components["schemas"]["PendingShutdown"];
+            /** @description Why the requested restart did not start (the file is saved anyway). */
+            restart_error?: string | null;
+            /** @description The new revision. */
+            revision: string;
+            saved: boolean;
+            warnings: string[];
+        };
+        /** @description How often a task runs. */
+        Schedule: {
+            time: string;
+            /** @enum {string} */
+            type: "daily";
+        } | {
+            days: string[];
+            time: string;
+            /** @enum {string} */
+            type: "weekly";
+        } | {
+            /** Format: int64 */
+            every_secs: number;
+            /** @enum {string} */
+            type: "interval";
+        } | {
+            expr: string;
+            /** @enum {string} */
+            type: "cron";
+        };
+        /** @description `GET /admin/schedule`. */
+        ScheduleOverview: {
+            /** @description `[scheduler] enabled`: when off, tasks are listed but never run. */
+            enabled: boolean;
+            /**
+             * Format: int64
+             * @description The server's clock, unix seconds.
+             */
+            now: number;
+            tasks: components["schemas"]["TaskView"][];
+            /** @description The zone the schedules are in (`Europe/Berlin`, or `UTC+02:00` when it has no name). */
+            timezone: string;
+            /** @description The zone's offset from UTC now, `+02:00`. */
+            utc_offset: string;
         };
         /** @description `GET /server`. */
         ServerInfo: {
@@ -789,6 +1442,11 @@ export interface components {
              * @description Port the client connects to for login (`[network.login] public_port`, else the bind port).
              */
             login_port: number;
+            /**
+             * @description Message of the day (`[server] motd`, plain text, at most 280 characters); absent when
+             *     there is none. The launcher's Home page shows it.
+             */
+            motd?: string | null;
             /** @description The gateway's display name. */
             name: string;
             /** @description Players in game now. */
@@ -819,6 +1477,59 @@ export interface components {
         ShutdownStatus: {
             pending?: null | components["schemas"]["PendingShutdown"];
         };
+        /** @description The body of create and update. */
+        TaskBody: {
+            enabled?: boolean;
+            /** @description 1 to 80 characters. */
+            name: string;
+            /** @description When it runs. */
+            schedule: components["schemas"]["Schedule"];
+            /** @description What the task does (`{"kind":"restart","delay_secs":300,"message":"..."}`). */
+            task: components["schemas"]["TaskKind"];
+        };
+        /** @description A task's action and its options. */
+        TaskKind: {
+            /**
+             * Format: int32
+             * @description Countdown in seconds (0 to 3600).
+             */
+            delay_secs?: number;
+            /** @enum {string} */
+            kind: "restart";
+            /** @description Added to every announcement (at most 200 characters). */
+            message?: string | null;
+        };
+        /** @description A task as the page shows it. */
+        TaskView: {
+            /** Format: int64 */
+            created_at: number;
+            created_by: string;
+            enabled: boolean;
+            /** Format: int32 */
+            id: number;
+            last_message?: string | null;
+            /**
+             * Format: int64
+             * @description Unix seconds.
+             */
+            last_run_at?: number | null;
+            /** @description `ok`, `failed`, `skipped` or `missed`. */
+            last_status?: string | null;
+            name: string;
+            /**
+             * Format: int64
+             * @description When it runs next (unix seconds); absent for a disabled task.
+             */
+            next_run_at?: number | null;
+            problem?: string | null;
+            schedule?: null | components["schemas"]["Schedule"];
+            schedule_text?: string | null;
+            task?: null | components["schemas"]["TaskKind"];
+            /** @description The task and the schedule in words. */
+            task_text?: string | null;
+            /** Format: int64 */
+            updated_at: number;
+        };
         /**
          * @description `POST /admin/players/{name}/transfer`: give `instance`, or `area` (with the optional
          *     layout fields) for a new one.
@@ -833,6 +1544,16 @@ export interface components {
             seed?: number | null;
             /** Format: int32 */
             topology?: number | null;
+        };
+        /** @description `POST /admin/config/validate`. */
+        ValidateRequest: {
+            content: string;
+        };
+        ValidateResponse: {
+            error?: null | components["schemas"]["ConfigProblem"];
+            valid: boolean;
+            /** @description Dangerous settings in valid text. */
+            warnings: string[];
         };
         /** @description `POST /web-token/redeem`. */
         WebTokenRedeemRequest: {
@@ -1119,6 +1840,161 @@ export interface operations {
             };
         };
     };
+    list_bans: {
+        parameters: {
+            query?: {
+                /** @description Only the bans in force now. */
+                active?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BanView"][];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_ban: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BanRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BanView"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    lift_ban: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ban id */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BanView"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     characters: {
         parameters: {
             query?: {
@@ -1202,6 +2078,304 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigFile"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description not started from a config file */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_config_backups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupInfo"][];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_config_backup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description backup file name from the list */
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupContent"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    apply_config_fields: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FieldsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FieldsResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    save_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    validate_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            413: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1422,6 +2596,109 @@ export interface operations {
             };
         };
     };
+    get_metrics: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Only samples after this time (unix milliseconds): to fetch what is new since the last
+                 *     call. Overrides `range_secs`.
+                 */
+                since?: number | null;
+                /** @description Only the last this many seconds (default: everything kept). */
+                range_secs?: number | null;
+                /**
+                 * @description At most this many points (default 600, at most 5000): longer ranges are merged into
+                 *     buckets that keep the peak of players, instances, memory and frame time.
+                 */
+                max_points?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricsResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    set_motd: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MotdRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MotdResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     kick: {
         parameters: {
             query?: never;
@@ -1615,6 +2892,392 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    get_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleOverview"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    preview_schedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskBody"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskView"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    update_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description task id */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskBody"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskView"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    delete_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description task id */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    disable_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description task id */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskView"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    enable_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description task id */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskView"];
+                };
+            };
+            /** @description the stored task cannot be read */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    list_task_runs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description task id */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunView"][];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

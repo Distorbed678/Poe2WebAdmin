@@ -420,6 +420,80 @@ main:focus { outline: none; }
 .empty-log { padding: 20px 14px; margin: 0; }
 .log-foot { font-size: 12px; margin-top: 8px; }
 
+
+/* ---------------------------------------------------------------- admin features */
+.small { font-size: 12px; }
+.foot { margin-top: 10px; }
+.mono { font-family: var(--mono); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.field.narrow { max-width: 260px; }
+ul.plain { margin: 0; padding-left: 18px; }
+ul.plain li { margin: 2px 0; }
+tr.dim td { opacity: 0.6; }
+tr.dim td:last-child, tr.dim td:nth-last-child(2) { opacity: 1; }
+td .switch { vertical-align: middle; }
+.table-wrap.history { max-height: min(60vh, 460px); overflow: auto; margin-bottom: 4px; }
+.zone-line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+.zone-line b { color: var(--text); font-weight: 600; }
+
+/* tabs (players: online / bans) */
+.tabs { display: flex; gap: 4px; margin: -6px 0 16px; border-bottom: 1px solid var(--line-soft); }
+.tabs a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: var(--muted); font-weight: 600; text-decoration: none; transition: color 0.16s, border-color 0.16s; }
+.tabs a:hover { color: var(--text); }
+.tabs a.on { color: var(--text); border-bottom-color: var(--accent); }
+.tabs a.on .icon { color: var(--accent); }
+.tabs .count { min-width: 20px; padding: 0 6px; border-radius: 99px; text-align: center; font-size: 11.5px; line-height: 1.6; background: var(--surface-3); color: var(--muted); font-variant-numeric: tabular-nums; }
+.tab-tools { margin-bottom: 12px; }
+
+/* dashboard charts */
+.activity .card-head { flex-wrap: wrap; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px 22px; }
+.chart-box { margin: 0; min-width: 0; padding: 12px 12px 8px; border: 1px solid var(--line-soft); border-radius: var(--radius-sm); background: var(--bg-2); }
+.chart-box figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.chart-box h3 { font-size: 13.5px; }
+.chart-box figcaption .muted { font-size: 12px; }
+
+/* config editor */
+.cfg-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; position: sticky; top: -24px; z-index: 5; padding: 10px 0; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); }
+.cfg-groups { display: grid; gap: 18px; }
+.cfg-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 16px 22px; }
+.cfg-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-left: 10px; border-left: 2px solid transparent; transition: border-color 0.2s; }
+.cfg-field.changed { border-left-color: var(--accent); }
+.cfg-field.wide { grid-column: 1 / -1; }
+.cfg-label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cfg-label label { font-weight: 600; font-size: 13px; }
+.cfg-field .hint { margin: 0; }
+.cfg-field .switch { padding: 4px 0; }
+.card.raw { padding: 12px; }
+textarea.code { display: block; width: 100%; min-height: 380px; height: calc(100vh - 360px); resize: vertical; font: 12.5px/1.55 var(--mono); tab-size: 2; white-space: pre; overflow: auto; background: var(--bg-2); }
+.raw-status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; }
+.raw-status .line-ex { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: pre; }
+.warn-text { display: inline-flex; align-items: center; gap: 6px; color: var(--warn); }
+.cfg-restart { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.cfg-restart .field { margin-bottom: 8px; }
+
+/* diff */
+.diff { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg-2); overflow: hidden; }
+.diff-stats { margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); font-size: 12.5px; color: var(--muted); }
+.diff-stats .add { color: var(--ok); font-weight: 650; }
+.diff-stats .del { color: var(--danger); font-weight: 650; }
+.diff-empty { margin: 0; padding: 14px; }
+.diff-body { overflow: auto; max-height: min(52vh, 520px); font: 12.5px/1.5 var(--mono); }
+.diff-gap { padding: 2px 12px; color: var(--faint); background: var(--surface-2); text-align: center; letter-spacing: 0.3em; }
+.dl { display: grid; grid-template-columns: 44px 44px 18px minmax(0, 1fr); }
+.dl .no { padding: 0 8px; text-align: right; color: var(--faint); user-select: none; font-variant-numeric: tabular-nums; }
+.dl .mk { text-align: center; user-select: none; }
+.dl .tx { white-space: pre-wrap; overflow-wrap: anywhere; padding-right: 12px; }
+.dl.add { background: color-mix(in srgb, var(--ok) 13%, transparent); }
+.dl.add .mk { color: var(--ok); }
+.dl.del { background: color-mix(in srgb, var(--danger) 13%, transparent); }
+.dl.del .mk { color: var(--danger); }
+
+/* schedule form preview */
+.preview { margin: 0 0 14px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg-2); border: 1px solid var(--line-soft); font-size: 13px; }
+.preview ul { margin: 6px 0 0; padding-left: 18px; }
+.preview li { margin: 2px 0; font-variant-numeric: tabular-nums; }
+
 /* ---------------------------------------------------------------- narrow windows */
 @media (max-width: 900px) {
   .body { grid-template-columns: 64px minmax(0, 1fr); }
@@ -428,7 +502,7 @@ main:focus { outline: none; }
   .side a span.label, .side-card { display: none; }
   .side a::before { left: -8px; }
   main { padding: 18px 16px 24px; }
-  .grid3 { grid-template-columns: 1fr; }
+  .grid3, .grid2 { grid-template-columns: 1fr; }
   .who span:last-child { display: none; }
 }
 @media (max-width: 640px) {
@@ -457,6 +531,8 @@ main:focus { outline: none; }
   .control-actions { width: 100%; }
   .control-actions .btn { flex: 1 1 140px; }
   th, td { padding: 9px 10px; }
+  .cfg-bar { top: -14px; }
+  .dl { grid-template-columns: 34px 34px 16px minmax(0, 1fr); }
   .kv { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .kv dd { margin-bottom: 8px; }
 }

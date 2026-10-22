@@ -16,11 +16,13 @@
   import Login from './pages/Login.svelte';
   import Dashboard from './pages/Dashboard.svelte';
   import Logs from './pages/Logs.svelte';
-  import Sessions from './pages/Sessions.svelte';
+  import Players from './pages/Players.svelte';
   import Instances from './pages/Instances.svelte';
   import Accounts from './pages/Accounts.svelte';
   import Characters from './pages/Characters.svelte';
   import CharacterDetail from './pages/CharacterDetail.svelte';
+  import Schedule from './pages/Schedule.svelte';
+  import Config from './pages/Config.svelte';
   import Panel from './pages/Panel.svelte';
 
   interface NavItem {
@@ -31,16 +33,20 @@
   const nav: NavItem[] = [
     { page: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { page: 'logs', label: 'Live logs', icon: 'logs' },
-    { page: 'sessions', label: 'Players online', icon: 'players' },
+    { page: 'players', label: 'Players', icon: 'players' },
     { page: 'instances', label: 'Instances', icon: 'instances' },
     { page: 'accounts', label: 'Accounts', icon: 'accounts' },
     { page: 'characters', label: 'Characters', icon: 'characters' },
+    { page: 'schedule', label: 'Schedule', icon: 'calendar' },
+    { page: 'config', label: 'Config', icon: 'settings' },
     ...(features.inventory ? [{ page: 'inventory', label: 'Inventory', icon: 'inventory' as const }] : []),
     ...(features.passives ? [{ page: 'passives', label: 'Passive tree', icon: 'passives' as const }] : []),
   ];
 
   // A route that is not shown (unknown page, or a stub whose flag is off) falls back to the dashboard.
-  const page = $derived(nav.some((n) => n.page === router.page) ? router.page : 'dashboard');
+  // (`#/sessions` was the players page's old address.)
+  const routed = $derived(router.page === 'sessions' ? 'players' : router.page);
+  const page = $derived(nav.some((n) => n.page === routed) ? routed : 'dashboard');
 
   // The server link is only polled while an admin is signed in.
   $effect(() => {
@@ -126,8 +132,8 @@
               <Dashboard />
             {:else if page === 'logs'}
               <Logs />
-            {:else if page === 'sessions'}
-              <Sessions />
+            {:else if page === 'players'}
+              <Players />
             {:else if page === 'instances'}
               <Instances />
             {:else if page === 'accounts'}
@@ -138,6 +144,10 @@
               {:else}
                 <Characters />
               {/if}
+            {:else if page === 'schedule'}
+              <Schedule />
+            {:else if page === 'config'}
+              <Config />
             {:else if page === 'inventory'}
               <Panel title="Inventory" icon="inventory" flag="VITE_FEATURE_INVENTORY" />
             {:else if page === 'passives'}

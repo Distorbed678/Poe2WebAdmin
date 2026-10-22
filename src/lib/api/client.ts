@@ -13,6 +13,13 @@ export type LogEvent = Schemas['LogEvent'];
 export type LogLevel = Schemas['LogLevel'];
 export type PendingShutdown = Schemas['PendingShutdown'];
 export type ShutdownKind = Schemas['ShutdownKind'];
+export type BanView = Schemas['BanView'];
+export type MetricsResponse = Schemas['MetricsResponse'];
+export type MetricsPoint = Schemas['MetricsPoint'];
+export type TaskView = Schemas['TaskView'];
+export type TaskBody = Schemas['TaskBody'];
+export type RunView = Schemas['RunView'];
+export type ConfigFile = Schemas['ConfigFile'];
 
 /** An error response: the HTTP status and the server's `{"error": "..."}` text. */
 export class ApiError extends Error {

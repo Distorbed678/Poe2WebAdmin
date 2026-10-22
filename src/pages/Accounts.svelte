@@ -10,6 +10,7 @@
   import Chip from '../lib/ui/Chip.svelte';
   import Empty from '../lib/ui/Empty.svelte';
   import Spinner from '../lib/ui/Spinner.svelte';
+  import BanDialog, { type BanTarget } from '../lib/ui/BanDialog.svelte';
 
   const res = new Resource(() => unwrap(api.GET('/api/v1/admin/accounts')));
   $effect(() => res.start());
@@ -52,6 +53,13 @@
       );
       void res.load();
     }
+  }
+
+  let banOpen = $state(false);
+  let banTarget = $state<BanTarget>({ kind: 'account' });
+  function openBan(a: AccountInfo) {
+    banTarget = { kind: 'account', account: a.username };
+    banOpen = true;
   }
 
   async function enable(a: AccountInfo) {
@@ -125,6 +133,15 @@
                   {:else}
                     <button type="button" class="btn sm danger" disabled={self} onclick={() => disable(a)}>Disable</button>
                   {/if}
+                  <button
+                    type="button"
+                    class="btn sm danger"
+                    disabled={self || a.role === 'admin'}
+                    title={self ? 'You cannot ban yourself' : a.role === 'admin' ? 'Take the admin role away first' : 'Ban for a time or for good, with a reason'}
+                    onclick={() => openBan(a)}
+                  >
+                    <Icon name="ban" size={13} /> Ban
+                  </button>
                 </div>
               </td>
             </tr>
@@ -138,3 +155,5 @@
 {:else}
   <div class="loading"><Spinner size={20} /> Loading...</div>
 {/if}
+
+<BanDialog bind:open={banOpen} target={banTarget} onDone={() => res.load()} />

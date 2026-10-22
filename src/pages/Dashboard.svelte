@@ -10,6 +10,8 @@
   import Empty from '../lib/ui/Empty.svelte';
   import Spinner from '../lib/ui/Spinner.svelte';
   import ServerControl from '../lib/ui/ServerControl.svelte';
+  import ActivityCharts from '../lib/ui/ActivityCharts.svelte';
+  import MotdCard from '../lib/ui/MotdCard.svelte';
 
   const res = new Resource(async () => {
     const [info, instances, sessions] = await Promise.all([
@@ -60,7 +62,11 @@
     </section>
   </div>
 
+  <div class="section"><ActivityCharts /></div>
+
   <div class="two section">
+    <MotdCard current={d.server.motd ?? ''} />
+
     <section class="card">
       <div class="card-head"><span class="head-icon"><Icon name="server" size={16} /></span><h2>Server</h2></div>
       <dl class="kv">
@@ -71,7 +77,9 @@
         <dd>{#if d.server.open_registration}<Chip tone="warn">open</Chip>{:else}<Chip>closed</Chip>{/if}</dd>
       </dl>
     </section>
+  </div>
 
+  <div class="section">
     <section class="card">
       <div class="card-head">
         <span class="head-icon"><Icon name="instances" size={16} /></span><h2>Busiest instances</h2>

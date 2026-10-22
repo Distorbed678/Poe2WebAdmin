@@ -11,18 +11,20 @@ The web admin site of the **Path of Exile 2 client 0.5.5e private server**
 |---|---|
 | Login | `POST /api/v1/login` with `kind: "web"` (12 hour token). Only admin accounts get in |
 | `#/token-login?t=<token>` | One-time sign-in link (the launcher's "Open web admin"): removes the token from the address bar and history, redeems it once with `POST /api/v1/web-token/redeem` for a web session. Expired, used or malformed links land on the login page with a notice |
-| Dashboard | **Server control** (Restart and Stop, each behind a confirmation dialog with an optional message for the players and a countdown in seconds; a running countdown with Cancel), server info, players online, instance summary, busiest instances. Refreshes every 5 s |
+| Dashboard | **Server control** (Restart and Stop, each behind a confirmation dialog with an optional message for the players and a countdown in seconds; a running countdown with Cancel), server info, players online, instance summary, busiest instances. Refreshes every 5 s. **Activity charts** (players and instances, simulation frame time, memory, CPU; range 15 min / 1 h / 6 h / 24 h; hand-rolled SVG on the theme tokens) and the **message of the day** card |
 | Live logs | WebSocket log stream: level, target prefix and text filters (applied by the server), pause and resume, autoscroll, at most 3000 lines in the DOM, colour by level, reconnect with backoff |
-| Players online | Kick, mute (minutes, or until unmuted), unmute, transfer (to an instance id, or a new area, seed, topology, orientation) |
+| Players (`#/players`, `#/sessions` still works) | **Online**: class and level, account, area, instance, connected for, IP address (admins only), filter and sort; kick, mute (minutes, or until unmuted), unmute, transfer (to an instance id, or a new area, seed, topology, orientation), ban. **Bans**: the list with expiry and history, new ban (account or address), lift. The Accounts page has a Ban button too |
 | Instances | List, close, create (area, seed, topology, orientation) |
-| Accounts | List, change role, disable and enable |
+| Accounts | List, change role, disable and enable, ban |
 | Characters | List (filter by account), detail view |
+| Schedule | Scheduled tasks (restart with a countdown and message) by day, weekdays, interval or cron in the server's time zone; preview of the next runs, on/off, edit, delete, history |
+| Config | The server's config file: form for the common keys, raw TOML with a syntax check (line and column), diff, Save or Save and restart, backups |
 | Announce | Button in the top bar: a chat line to everyone |
 | Inventory, Passive tree | Stubs ("waiting for the inventory work"), shown only when `VITE_FEATURE_INVENTORY` / `VITE_FEATURE_PASSIVES` is `true` at build time |
 
 Every page shows a banner under the top bar while a stop or restart is pending (countdown, Cancel), while the server restarts, when it has stopped and when it cannot be reached. The page polls `GET /api/v1/server` and `GET /api/v1/admin/server/shutdown` (every 5 s, every 1.5 s during an outage or countdown); when the server answers again it checks the session (`GET /api/v1/me`; web sessions live in the database and survive a restart), says so in a toast and reloads the dashboard.
 
-Close, kick, disable, role changes, stop and restart ask for confirmation. The token is kept in `sessionStorage` (gone when the tab
+Close, kick, unmute, ban, lift, disable, delete, role changes, stop and restart ask for confirmation. The token is kept in `sessionStorage` (gone when the tab
 closes); any `401` returns to the login.
 
 ## Design
@@ -101,6 +103,10 @@ src/
   lib/*.svelte.ts                   auth, router, theme, polling Resource, toasts and confirmations, the server link (Svelte runes)
   lib/serverLink.ts, shutdown.ts    the reconnect state machine (pure), the countdown field's limits
   lib/ui/                           Icon, Chip, Empty, Progress, Modal, ConfirmDialog, Toasts, ServerControl, ShutdownBanner, ...
+  lib/ui/LineChart.svelte           the SVG chart (scales and paths in lib/chart.ts), ActivityCharts, MotdCard, BanDialog, DiffView
+  lib/chart.ts, duration.ts         chart scaling, ticks, number formats; "7d" and "1h30m" parsing for bans
+  lib/schedule.ts, configForm.ts    task and schedule forms and their checks; the config form (values, changes, bounds)
+  lib/diff.ts, players.ts, motd.ts  the line diff of the config review; player filters and ban wording; the message limits
 scripts/gen-api.mjs                 the gen:api script
 ```
 

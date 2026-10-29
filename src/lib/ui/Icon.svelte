@@ -42,6 +42,7 @@
     undo: ['M9 14L4 9l5-5', 'M4 9h10a6 6 0 010 12h-3'],
     save: ['M5 4h11l4 4v11a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z', 'M8 4v5h7V4', 'M8 20v-6h8v6'],
     server: ['M5 4h14a2 2 0 012 2v3a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z', 'M5 13h14a2 2 0 012 2v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 012-2z', 'M7 7.5h.01M7 16.5h.01'],
+    chevron: ['M6 9l6 6 6-6'],
   } as const;
   export type IconName = keyof typeof paths;
 </script>

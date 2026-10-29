@@ -1,1 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0b35a"/><stop offset="1" stop-color="#ff8f4d"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="#141824"/><path d="M8 25V14a8 8 0 0 1 16 0v11" fill="none" stroke="url(#g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 25v-9.5a3.5 3.5 0 0 1 7 0V25" fill="none" stroke="#8d7df7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 64 64">
+  <!-- Poe2 private-server mark ("Rune seal"): a crimson seal with a gold rune of the numeral II and a
+       diamond. Original artwork; nothing of Path of Exile or Grinding Gear Games. -->
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6d48a"/>
+      <stop offset=".55" stop-color="#d1a14e"/>
+      <stop offset="1" stop-color="#9a6a1c"/>
+    </linearGradient>
+    <linearGradient id="crim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b8392d"/>
+      <stop offset="1" stop-color="#4e120d"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="#120a09"/>
+  <circle cx="32" cy="32" r="25" fill="url(#crim)"/>
+  <circle cx="32" cy="32" r="25" fill="none" stroke="url(#gold)" stroke-width="2.5"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#d1a14e" stroke-opacity=".45" stroke-width="1" stroke-dasharray="2 3"/>
+  <path d="M25 18v28M39 18v28M21 18h22M21 46h22M25 32l7-7 7 7-7 7z" fill="none" stroke="url(#gold)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

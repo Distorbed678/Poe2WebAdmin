@@ -9,8 +9,8 @@
   import Toasts from './lib/ui/Toasts.svelte';
   import Modal from './lib/ui/Modal.svelte';
   import Icon, { type IconName } from './lib/ui/Icon.svelte';
-  import Chip from './lib/ui/Chip.svelte';
-  import Spinner from './lib/ui/Spinner.svelte';
+  import { slide } from 'svelte/transition';
+  import { DUR, ease, ms } from './lib/motion';
   import ThemeToggle from './lib/ui/ThemeToggle.svelte';
   import ShutdownBanner from './lib/ui/ShutdownBanner.svelte';
   import Login from './pages/Login.svelte';
@@ -31,19 +31,67 @@
     label: string;
     icon: IconName;
   }
-  const nav: NavItem[] = [
-    { page: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { page: 'logs', label: 'Live logs', icon: 'logs' },
-    { page: 'players', label: 'Players', icon: 'players' },
-    { page: 'instances', label: 'Instances', icon: 'instances' },
-    { page: 'accounts', label: 'Accounts', icon: 'accounts' },
-    { page: 'characters', label: 'Characters', icon: 'characters' },
-    { page: 'mods', label: 'Mods', icon: 'mods' },
-    { page: 'schedule', label: 'Schedule', icon: 'calendar' },
-    { page: 'config', label: 'Config', icon: 'settings' },
-    ...(features.inventory ? [{ page: 'inventory', label: 'Inventory', icon: 'inventory' as const }] : []),
-    ...(features.passives ? [{ page: 'passives', label: 'Passive tree', icon: 'passives' as const }] : []),
+  interface NavGroup {
+    id: string;
+    label: string | null;
+    /** Folded by default (the advanced tools): it opens by itself while one of its pages is shown. */
+    folds: boolean;
+    items: NavItem[];
+  }
+  // Calm first: the dashboard, the everyday groups, and the advanced tools out of the way.
+  const groups: NavGroup[] = [
+    { id: 'home', label: null, folds: false, items: [{ page: 'dashboard', label: 'Dashboard', icon: 'dashboard' }] },
+    {
+      id: 'people',
+      label: 'People',
+      folds: false,
+      items: [
+        { page: 'players', label: 'Players', icon: 'players' },
+        { page: 'accounts', label: 'Accounts', icon: 'accounts' },
+        { page: 'characters', label: 'Characters', icon: 'characters' },
+      ],
+    },
+    {
+      id: 'world',
+      label: 'World',
+      folds: false,
+      items: [
+        { page: 'instances', label: 'Instances', icon: 'instances' },
+        { page: 'schedule', label: 'Schedule', icon: 'calendar' },
+      ],
+    },
+    {
+      id: 'advanced',
+      label: 'Advanced',
+      folds: true,
+      items: [
+        { page: 'logs', label: 'Live logs', icon: 'logs' },
+        { page: 'config', label: 'Config', icon: 'settings' },
+        { page: 'mods', label: 'Mods', icon: 'mods' },
+        ...(features.inventory ? [{ page: 'inventory', label: 'Inventory', icon: 'inventory' as const }] : []),
+        ...(features.passives ? [{ page: 'passives', label: 'Passive tree', icon: 'passives' as const }] : []),
+      ],
+    },
   ];
+  const nav = groups.flatMap((g) => g.items);
+  const FOLD_KEY = 'poe2admin.advanced-open';
+  let advancedOpen = $state(readFold());
+  function readFold(): boolean {
+    try {
+      return localStorage.getItem(FOLD_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+  function toggleFold() {
+    advancedOpen = !advancedOpen;
+    try {
+      localStorage.setItem(FOLD_KEY, advancedOpen ? '1' : '0');
+    } catch {
+      /* private mode: just for this visit */
+    }
+  }
+  const showGroup = (g: NavGroup) => !g.folds || advancedOpen || g.items.some((n) => n.page === page);
 
   // A route that is not shown (unknown page, or a stub whose flag is off) falls back to the dashboard.
   // (`#/sessions` was the players page's old address.)
@@ -88,43 +136,53 @@
 {:else}
   <a class="skip" href="#main">Skip to content</a>
   <div class="window">
-    <header class="topbar">
-      <a class="brand" href="#/dashboard" aria-label="PoE2 Admin, dashboard">
-        <img src="./logo.png" alt="" width="28" height="28" />
-        <span>PoE2 <b>Admin</b></span>
-      </a>
-      <div class="top-end">
-        {#if server.link.reachable}
-          <Chip tone="ok" dot pulse title="The server answers">{server.info ? `${server.info.online} online` : 'online'}</Chip>
-        {:else}
-          <Chip tone="bad" dot title="The server does not answer">offline</Chip>
-        {/if}
-        <button type="button" class="btn sm with-label" onclick={() => (announceOpen = true)} title="Announce to all players">
-          <Icon name="announce" size={15} /> <span class="label">Announce</span>
-        </button>
-        <ThemeToggle />
-        <span class="who" title="Signed in as {auth.account?.username ?? ''}">
-          <span class="avatar"><Icon name="shield" size={15} /></span>
-          <span>{auth.account?.username ?? ''}</span>
-        </span>
-        <button type="button" class="btn sm with-label" onclick={() => auth.logout()} title="Sign out">
-          <Icon name="logout" size={15} /> <span class="label">Sign out</span>
-        </button>
-      </div>
-    </header>
     <ShutdownBanner />
     <div class="body">
       <nav class="side" aria-label="Main">
-        {#each nav as n (n.page)}
-          <a href={'#/' + n.page} aria-current={page === n.page ? 'page' : undefined} title={n.label}>
-            <Icon name={n.icon} size={18} />
-            <span class="label">{n.label}</span>
-          </a>
+        <a class="brand" href="#/dashboard" aria-label="PoE2 Admin, dashboard">
+          <img src="./logo.png" alt="" width="26" height="26" />
+          <span class="brand-text">
+            <b>Admin</b>
+            <small title={server.link.reachable ? 'The server answers' : 'The server does not answer'}>
+              <span class="dot-state" class:on={server.link.reachable} class:bad={!server.link.reachable}></span>
+              {#if server.info}{server.info.name}{:else if server.link.reachable}online{:else}offline{/if}
+            </small>
+          </span>
+        </a>
+        {#each groups as g (g.id)}
+          {#if g.label && g.folds}
+            <button type="button" class="side-group" aria-expanded={showGroup(g)} aria-controls="nav-{g.id}" onclick={toggleFold}>
+              {g.label} <Icon name="chevron" size={12} />
+            </button>
+          {:else if g.label}
+            <div class="side-group">{g.label}</div>
+          {/if}
+          {#if showGroup(g)}
+            <div id="nav-{g.id}" class="side-items" transition:slide={{ duration: ms(DUR.base), easing: ease }}>
+              {#each g.items as n (n.page)}
+                <a href={'#/' + n.page} aria-current={page === n.page ? 'page' : undefined} title={n.label}>
+                  <Icon name={n.icon} size={16} />
+                  <span class="label">{n.label}</span>
+                </a>
+              {/each}
+            </div>
+          {/if}
         {/each}
         <span class="spacer"></span>
-        <div class="side-card">
-          <strong><Icon name="server" size={14} /> {server.info?.name ?? 'Server'}</strong>
-          <span class="muted">{#if server.info}client {server.info.version}{:else}<Spinner size={11} /> connecting{/if}</span>
+        <div class="side-actions">
+          <button type="button" class="btn sm" onclick={() => (announceOpen = true)} title="Announce to all players">
+            <Icon name="announce" size={14} /> <span class="label">Announce...</span>
+          </button>
+        </div>
+        <div class="side-foot">
+          <span class="who" title="Signed in as {auth.account?.username ?? ''}">
+            <Icon name="shield" size={13} />
+            <span>{auth.account?.username ?? ''}</span>
+          </span>
+          <ThemeToggle />
+          <button type="button" class="btn icon sm ghost" onclick={() => auth.logout()} title="Sign out" aria-label="Sign out">
+            <Icon name="logout" size={15} />
+          </button>
         </div>
       </nav>
       <main id="main" tabindex="-1" bind:this={main}>

@@ -20,17 +20,17 @@ The web admin site of the **Path of Exile 2 client 0.5.5e private server**
 | Characters | List (filter by account), detail view |
 | Schedule | Scheduled tasks (restart with a countdown and message) by day, weekdays, interval or cron in the server's time zone; preview of the next runs, on/off, edit, delete, history |
 | Config | The server's config file: form for the common keys, raw TOML with a syntax check (line and column), diff, Save or Save and restart, backups |
-| Announce | Button in the top bar: a chat line to everyone |
+| Announce | Button at the foot of the sidebar: a chat line to everyone |
 | Inventory, Passive tree | Stubs ("waiting for the inventory work"), shown only when `VITE_FEATURE_INVENTORY` / `VITE_FEATURE_PASSIVES` is `true` at build time |
 
-Every page shows a banner under the top bar while a stop or restart is pending (countdown, Cancel), while the server restarts, when it has stopped and when it cannot be reached. The page polls `GET /api/v1/server` and `GET /api/v1/admin/server/shutdown` (every 5 s, every 1.5 s during an outage or countdown); when the server answers again it checks the session (`GET /api/v1/me`; web sessions live in the database and survive a restart), says so in a toast and reloads the dashboard.
+Every page shows a banner at the top while a stop or restart is pending (countdown, Cancel), while the server restarts, when it has stopped and when it cannot be reached. The page polls `GET /api/v1/server` and `GET /api/v1/admin/server/shutdown` (every 5 s, every 1.5 s during an outage or countdown); when the server answers again it checks the session (`GET /api/v1/me`; web sessions live in the database and survive a restart), says so in a toast and reloads the dashboard.
 
 Close, kick, unmute, ban, lift, disable, delete, role changes, stop and restart ask for confirmation. The token is kept in `sessionStorage` (gone when the tab
 closes); any `401` returns to the login.
 
 ## Design
 
-The look follows the launcher (`modules/launcher`, MIT like this repo): the same colour tokens (`src/app.css`, dark by default, `data-theme="light"` for light; `main.ts` sets it from the saved choice or the system preference, the sun/moon button in the top bar toggles and saves it in `localStorage`), the same typography, a top bar with the drifting accent line, a sidebar with icons (an icon rail below 900 px, a bottom tab bar below 640 px), cards, status chips, progress bars, empty states, dialogs and toasts. The small components are copies of the launcher's (`src/lib/ui/`: `Icon`, `Chip`, `Empty`, `Progress`, `Spinner`, `Toasts`, `Modal`, `ConfirmDialog`, `PageHead`, `Switch`), so this repo has no dependency on the launcher's. Animations (page and dialog entrance, toasts, shine on progress bars, the floating empty-state icon) are CSS keyframes and Svelte transitions whose durations go through `ms()` in `src/lib/motion.ts`; under `prefers-reduced-motion` they are switched off.
+The look is the launcher's (`modules/launcher`, MIT like this repo): the design tokens in `src/tokens.css` and `src/lib/motion.ts` are identical copies of the launcher's ("Ash & Blood": red-black, gold, crimson; Cinzel headings over Inter, both bundled from `@fontsource-variable`, SIL OFL; change both repos together). Dark by default, `data-theme="light"` for the parchment variant (`main.ts` sets it from the saved choice or the system preference, the sun/moon button at the foot of the sidebar toggles and saves it in `localStorage`). The logo (`public/logo.png`, `public/favicon.svg`) is the launcher's *rune seal*. The shell is a grouped sidebar (brand and server status; Dashboard; People; World; Advanced, folded by default, its state in `localStorage`; Announce, account, theme and Sign out at the foot; an icon rail below 900 px, a bottom tab bar below 640 px), then cards, status chips, progress bars, empty states, dialogs and toasts. The small components are copies of the launcher's (`src/lib/ui/`: `Icon`, `Chip`, `Empty`, `Progress`, `Spinner`, `Toasts`, `Modal`, `ConfirmDialog`, `PageHead`, `Switch`), so this repo has no dependency on the launcher's. Motion is fade and slide only with one easing curve: CSS uses the duration tokens (`--dur-fast` 150 ms to `--dur-page` 350 ms), Svelte transitions `DUR`, `ease` and `ms()` from `src/lib/motion.ts`; skeletons while the dashboard loads; under `prefers-reduced-motion` everything is 0.
 
 ## Develop
 
@@ -97,7 +97,8 @@ Regenerate after the API changes, fix whatever `npm run check` then reports, and
 
 ```
 src/
-  main.ts, App.svelte, app.css      shell (top bar, sidebar, banner), announce dialog, the one stylesheet
+  main.ts, App.svelte, app.css      shell (grouped sidebar, banner), announce dialog, the one stylesheet
+  tokens.css                        design tokens (identical copy of the launcher's)
   pages/                            one component per page
   lib/api/                          schema.d.ts (generated), client.ts, token.ts
   lib/logs/                         log filter + ring buffer + message parsing (ring.ts), reconnecting WebSocket (socket.ts)

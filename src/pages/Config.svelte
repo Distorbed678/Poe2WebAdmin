@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Fold from '../lib/ui/Fold.svelte';
   import { api, unwrap, ApiError, type ConfigFile } from '../lib/api/client';
   import { Resource } from '../lib/resource.svelte';
   import { run, toasts } from '../lib/notify.svelte';
@@ -31,6 +32,8 @@
 
   // What the page edits: the text, and the form's values (the form and the text are kept in step on every switch).
   let tab = $state<'form' | 'raw'>('form');
+  /** Which form sections are open (the first one by default). */
+  let openGroups = $state<Record<string, boolean>>({});
   let screen = $state<'edit' | 'review'>('edit');
   let loadedRev = $state('');
   let original = $state(''); // the file as loaded (what the diff compares against)
@@ -275,19 +278,12 @@
         <button type="button" role="tab" aria-selected={tab === 'form'} class:on={tab === 'form'} onclick={() => showTab('form')} disabled={working}>Form</button>
         <button type="button" role="tab" aria-selected={tab === 'raw'} class:on={tab === 'raw'} onclick={() => showTab('raw')} disabled={working}>Raw TOML</button>
       </div>
-      <span class="grow"></span>
-      {#if dirty}<Chip tone="warn" dot>unsaved changes</Chip>{/if}
-      <button type="button" class="btn sm" disabled={!dirty || working} onclick={discard}><Icon name="undo" size={14} /> Discard</button>
-      <button type="button" class="btn primary sm" disabled={!dirty || working || !editable || Object.keys(errors).length > 0} onclick={review}>
-        {#if working}<Spinner size={13} />{/if} Review changes
-      </button>
     </div>
 
     {#if tab === 'form'}
       <div class="cfg-groups">
         {#each groups as g (g.section)}
-          <section class="card">
-            <div class="card-head"><span class="head-icon"><Icon name="settings" size={16} /></span><h2>{g.title}</h2></div>
+          <Fold title={g.title} open={openGroups[g.section] ?? g === groups[0]} summary={`${g.fields.length} setting${g.fields.length === 1 ? '' : 's'}${g.fields.some((x) => x.path in formChanges) ? ' · changed' : ''}`}>
             <div class="cfg-fields">
               {#each g.fields as fld (fld.path)}
                 {@const err = errors[fld.path]}
@@ -324,7 +320,7 @@
                 </div>
               {/each}
             </div>
-          </section>
+          </Fold>
         {/each}
       </div>
       <p class="hint foot">The form covers the common keys. Everything else is in the Raw TOML tab; comments and layout are kept either way.</p>
@@ -356,6 +352,16 @@
           {/if}
         </div>
       </section>
+    {/if}
+    {#if dirty}
+      <div class="cfg-sticky">
+        <Chip tone="warn" dot>unsaved changes</Chip>
+        <span class="grow"></span>
+        <button type="button" class="btn ghost" disabled={working} onclick={discard}><Icon name="undo" size={14} /> Discard</button>
+        <button type="button" class="btn primary" disabled={working || !editable || Object.keys(errors).length > 0} onclick={review}>
+          {#if working}<Spinner size={13} />{/if} Review and save
+        </button>
+      </div>
     {/if}
   {:else}
     <section class="card review">

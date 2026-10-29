@@ -163,9 +163,13 @@
 
 <PageHead title="Schedule" subtitle="Tasks that run by themselves, in the server's time zone" icon="calendar">
   <Status {res} />
-  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}><Icon name="refresh" size={14} /> Refresh</button>
-  <button type="button" class="btn primary sm" onclick={openNew}><Icon name="plus" size={14} /> New task</button>
+  <button type="button" class="btn sm icon ghost" onclick={() => res.load()} disabled={res.loading} aria-label="Refresh" title="Refresh"><Icon name="refresh" size={14} /></button>
 </PageHead>
+
+<div class="toolbar">
+  <span class="grow"></span>
+  <button type="button" class="btn primary" onclick={openNew}><Icon name="plus" size={14} /> New task</button>
+</div>
 
 {#if d}
   <p class="zone-line">

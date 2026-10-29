@@ -44,6 +44,11 @@ class Auth {
     await this.accept(data);
   }
 
+  /** The first-run page made the first admin and got its session (`POST /setup`). */
+  async acceptSetup(data: LoginResponse): Promise<void> {
+    await this.accept(data);
+  }
+
   /** Keeps a new web session, unless the account is no admin (then the token is revoked). */
   private async accept(data: LoginResponse): Promise<void> {
     if (data.account.role !== 'admin') {

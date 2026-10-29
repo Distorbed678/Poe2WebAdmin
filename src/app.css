@@ -487,3 +487,16 @@ textarea.code { display: block; width: 100%; min-height: 380px; height: calc(100
 :root[data-theme='light'] .login-wrap::before { background: radial-gradient(ellipse 60% 55% at 50% 45%, rgb(142 42 34 / 0.1), transparent 70%); }
 td code { white-space: nowrap; }
 td .row-actions { flex-wrap: nowrap; }
+
+/* One toolbar per list page: search, filters, the page's main action. */
+.toolbar { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.toolbar .search { display: inline-flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-3); border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-2); color: var(--faint); min-width: 240px; }
+.toolbar .search input { border: 0; background: none; padding: 8px 0; min-width: 0; flex: 1; outline: none; }
+.toolbar .search:focus-within { border-color: var(--focus); }
+.pills { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); }
+.pills button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 13px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: none; color: var(--muted); font: 500 var(--fs-sm) / 1.4 var(--font); cursor: pointer; transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), background var(--dur) var(--ease); }
+.pills button:hover { color: var(--text); border-color: color-mix(in srgb, var(--gold) 40%, var(--line)); }
+.pills button.on { border-color: var(--gold); color: var(--gold-2); background: color-mix(in srgb, var(--gold) 8%, transparent); }
+table.clickable tbody tr { cursor: pointer; }
+table.clickable tbody tr:hover td { background: var(--surface-2); }
+table.clickable tbody tr.on td { background: var(--selected-bg, rgb(142 42 34 / 0.3)); }

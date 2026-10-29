@@ -30,6 +30,11 @@
 </script>
 
 <PageHead title="Characters" subtitle={account ? `Account ${account}` : 'All accounts'} icon="characters">
+  <Status {res} />
+  <button type="button" class="btn sm icon ghost" onclick={() => res.load()} disabled={res.loading} aria-label="Refresh" title="Refresh"><Icon name="refresh" size={14} /></button>
+</PageHead>
+
+<div class="toolbar">
   <label class="inline">
     <span>Account</span>
     <select value={account} onchange={(e) => choose(e.currentTarget.value)}>
@@ -42,11 +47,7 @@
       {/if}
     </select>
   </label>
-  <Status {res} />
-  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
-    <Icon name="refresh" size={14} /> Refresh
-  </button>
-</PageHead>
+</div>
 
 {#if res.data}
   {#if res.data.length === 0}

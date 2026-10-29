@@ -169,29 +169,11 @@
 
 <PageHead title="Players" subtitle={tab === 'online' ? 'Characters currently in game' : 'Bans on accounts and addresses'} icon="players">
   {#if tab === 'online'}
-    <label class="inline">
-      <span class="sr-only">Filter players</span>
-      <input type="search" placeholder="Filter..." bind:value={filter} />
-    </label>
-    <label class="inline">
-      <span>Sort</span>
-      <select bind:value={sortBy}>
-        <option value="character">Character</option>
-        <option value="account">Account</option>
-        <option value="level">Level</option>
-        <option value="connected">Longest connected</option>
-      </select>
-    </label>
     <Status {res} />
-    <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
-      <Icon name="refresh" size={14} /> Refresh
-    </button>
+  <button type="button" class="btn sm icon ghost" onclick={() => res.load()} disabled={res.loading} aria-label="Refresh" title="Refresh"><Icon name="refresh" size={14} /></button>
   {:else}
     <Status res={bans} />
-    <button type="button" class="btn sm" onclick={() => bans.load()} disabled={bans.loading}>
-      <Icon name="refresh" size={14} /> Refresh
-    </button>
-    <button type="button" class="btn sm danger" onclick={() => openBan({ kind: 'ip' })}><Icon name="ban" size={14} /> New ban</button>
+  <button type="button" class="btn sm icon ghost" onclick={() => bans.load()} disabled={bans.loading} aria-label="Refresh" title="Refresh"><Icon name="refresh" size={14} /></button>
   {/if}
 </PageHead>
 
@@ -202,6 +184,28 @@
   <a role="tab" aria-selected={tab === 'bans'} class:on={tab === 'bans'} href={hrefFor('players', { tab: 'bans' })}>
     <Icon name="ban" size={15} /> Bans {#if bans.data && !showAllBans}<span class="count">{activeBans}</span>{/if}
   </a>
+</div>
+
+<div class="toolbar">
+  {#if tab === 'online'}
+    <label class="search">
+      <Icon name="search" size={14} />
+      <span class="sr-only">Search players</span>
+      <input type="search" placeholder="Search characters or accounts" bind:value={filter} />
+    </label>
+    <label class="inline">
+      <span>Sort</span>
+      <select bind:value={sortBy}>
+        <option value="character">Character</option>
+        <option value="account">Account</option>
+        <option value="level">Level</option>
+        <option value="connected">Longest connected</option>
+      </select>
+    </label>
+  {:else}
+    <span class="grow"></span>
+    <button type="button" class="btn danger" onclick={() => openBan({ kind: 'ip' })}><Icon name="ban" size={14} /> New ban</button>
+  {/if}
 </div>
 
 {#if tab === 'online'}

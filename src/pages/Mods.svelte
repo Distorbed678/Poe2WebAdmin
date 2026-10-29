@@ -15,9 +15,7 @@
 
 <PageHead title="Mods" subtitle={res.data ? summarize(res.data.mods) : 'Server mods and the client mods players need'} icon="mods">
   <Status {res} />
-  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
-    <Icon name="refresh" size={14} /> Refresh
-  </button>
+  <button type="button" class="btn sm icon ghost" onclick={() => res.load()} disabled={res.loading} aria-label="Refresh" title="Refresh"><Icon name="refresh" size={14} /></button>
 </PageHead>
 
 {#if res.data}

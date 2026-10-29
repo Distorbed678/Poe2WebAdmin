@@ -14,7 +14,11 @@ export interface paths {
         /** Every account. */
         get: operations["accounts"];
         put?: never;
-        post?: never;
+        /**
+         * Creates an account (role `player` unless `admin` is given). The password is checked like a
+         *     registration's; `409` when the name is taken.
+         */
+        post: operations["create_account"];
         delete?: never;
         options?: never;
         head?: never;
@@ -739,6 +743,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/local/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The newest metrics sample, without a token, for a direct request from the server's own
+         *     computer only (the launcher that hosts the server shows it; the same check as `/setup`).
+         */
+        get: operations["local"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/login": {
         parameters: {
             query?: never;
@@ -858,6 +882,28 @@ export interface paths {
         get: operations["server"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the server still needs its first admin, and whether this request may create it. */
+        get: operations["status"];
+        put?: never;
+        /**
+         * Creates the first account, with the admin role, and signs it in (a `web` token, as
+         *     `POST /login` returns). `403` once any account exists or when the request is not a direct
+         *     one from this computer.
+         */
+        post: operations["create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1077,6 +1123,15 @@ export interface components {
             line?: number | null;
             message: string;
         };
+        /** @description `POST /admin/accounts`. */
+        CreateAccountRequest: {
+            /** @description Plain text, at least 8 characters. Use HTTPS outside the local machine. */
+            password: string;
+            /** @description `player` (default) or `admin`. */
+            role?: string | null;
+            /** @description 3-64 characters from `A-Za-z0-9_.@+-`. */
+            username: string;
+        };
         CreatedInstance: {
             /** Format: int32 */
             id: number;
@@ -1128,6 +1183,17 @@ export interface components {
              * @description Forced topology (1-based); absent: the client's choice.
              */
             topology?: number | null;
+        };
+        /** @description `GET /local/metrics`: the newest sample, for the launcher that hosts the server. */
+        LocalMetrics: {
+            /** @description `[metrics] enabled`. */
+            enabled: boolean;
+            latest?: null | components["schemas"]["MetricsPoint"];
+            /**
+             * Format: int64
+             * @description Seconds since the server started.
+             */
+            uptime_secs: number;
         };
         LocationInfo: {
             /** Format: int32 */
@@ -1218,6 +1284,13 @@ export interface components {
              * @description Instances that exist.
              */
             instances: number;
+            /**
+             * Format: int64
+             * @description Network traffic of the game connections in bytes per second (TCP payload in and out).
+             */
+            net_in_bps: number;
+            /** Format: int64 */
+            net_out_bps: number;
             /**
              * Format: int32
              * @description Instances with at least one player.
@@ -1565,6 +1638,17 @@ export interface components {
             /** @description The game client version this server speaks. */
             version: string;
         };
+        /** @description `GET /setup`: the first-run state. */
+        SetupStatus: {
+            /** @description The request came directly from the computer the server runs on. */
+            local: boolean;
+            /** @description `[gateway] display_name`. */
+            name: string;
+            /** @description The server has no account yet and this request may create the first admin. */
+            needed: boolean;
+            /** @description `[accounts] open_registration`: players can create accounts on the register page. */
+            open_registration: boolean;
+        };
         /**
          * @description What the process does once the countdown is over.
          * @enum {string}
@@ -1733,6 +1817,62 @@ export interface operations {
                 };
             };
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    create_account: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccountRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountInfo"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description name taken */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3703,6 +3843,34 @@ export interface operations {
             };
         };
     };
+    local: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalMetrics"];
+                };
+            };
+            /** @description not a direct request from this computer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -3967,6 +4135,65 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServerInfo"];
+                };
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description the server has accounts already, or the request is not from this computer */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
                 };
             };
         };

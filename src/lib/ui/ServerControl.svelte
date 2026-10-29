@@ -18,7 +18,8 @@
     { label: '10 min', secs: 600 },
   ];
 
-  let { online = null, uptime = null }: { online?: number | null; uptime?: number | null } = $props();
+  /** `compact`: just the Restart and Stop buttons (the dashboard's title row; the countdown shows in the banner). */
+  let { online = null, uptime = null, compact = false }: { online?: number | null; uptime?: number | null; compact?: boolean } = $props();
 
   let kind = $state<ShutdownKind>('restart');
   let open = $state(false);
@@ -87,6 +88,10 @@
   const chipTone = $derived(tone === 'ok' ? 'ok' : tone === 'busy' ? 'warn' : 'bad');
 </script>
 
+{#if compact}
+  <button type="button" class="btn sm" disabled={phase !== 'up'} onclick={() => ask('restart')}><Icon name="restart" size={14} /> Restart</button>
+  <button type="button" class="btn sm danger" disabled={phase !== 'up'} onclick={() => ask('stop')}><Icon name="stop" size={14} /> Stop</button>
+{:else}
 <section class="card control" aria-label="Server control">
   <div class="control-info">
     <span class="power {tone}"><Icon name="power" size={22} /></span>
@@ -129,6 +134,7 @@
     </div>
   {/if}
 </section>
+{/if}
 
 <Modal bind:open title={kind === 'stop' ? 'Stop the server?' : 'Restart the server?'} icon={kind === 'stop' ? 'stop' : 'restart'} danger={kind === 'stop'}>
   <form onsubmit={submit}>

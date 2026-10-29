@@ -67,11 +67,14 @@
 
 <PageHead title="Instances" subtitle="Running area instances" icon="instances">
   <Status {res} />
-  <button type="button" class="btn sm" onclick={() => res.load()} disabled={res.loading}>
-    <Icon name="refresh" size={14} /> Refresh
-  </button>
-  <button type="button" class="btn sm primary" onclick={openCreate}><Icon name="plus" size={14} /> Create instance</button>
+  <button type="button" class="btn sm icon ghost" onclick={() => res.load()} disabled={res.loading} aria-label="Refresh" title="Refresh"><Icon name="refresh" size={14} /></button>
 </PageHead>
+
+<div class="toolbar">
+  <span class="muted">{res.data ? `${res.data.length} instance${res.data.length === 1 ? '' : 's'}` : ''}</span>
+  <span class="grow"></span>
+  <button type="button" class="btn primary" onclick={openCreate}><Icon name="plus" size={14} /> Create instance</button>
+</div>
 
 {#if res.data}
   {#if res.data.length === 0}

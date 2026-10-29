@@ -14,6 +14,8 @@
   import ThemeToggle from './lib/ui/ThemeToggle.svelte';
   import ShutdownBanner from './lib/ui/ShutdownBanner.svelte';
   import Login from './pages/Login.svelte';
+  import Register from './pages/Register.svelte';
+  import Setup from './pages/Setup.svelte';
   import Dashboard from './pages/Dashboard.svelte';
   import Logs from './pages/Logs.svelte';
   import Players from './pages/Players.svelte';
@@ -38,7 +40,7 @@
     folds: boolean;
     items: NavItem[];
   }
-  // Calm first: the dashboard, the everyday groups, and the advanced tools out of the way.
+  // The dashboard, then three groups: people, the world, the server itself.
   const groups: NavGroup[] = [
     { id: 'home', label: null, folds: false, items: [{ page: 'dashboard', label: 'Dashboard', icon: 'dashboard' }] },
     {
@@ -61,13 +63,13 @@
       ],
     },
     {
-      id: 'advanced',
-      label: 'Advanced',
-      folds: true,
+      id: 'server',
+      label: 'Server',
+      folds: false,
       items: [
-        { page: 'logs', label: 'Live logs', icon: 'logs' },
         { page: 'config', label: 'Config', icon: 'settings' },
         { page: 'mods', label: 'Mods', icon: 'mods' },
+        { page: 'logs', label: 'Live logs', icon: 'logs' },
         ...(features.inventory ? [{ page: 'inventory', label: 'Inventory', icon: 'inventory' as const }] : []),
         ...(features.passives ? [{ page: 'passives', label: 'Passive tree', icon: 'passives' as const }] : []),
       ],
@@ -97,6 +99,14 @@
   // (`#/sessions` was the players page's old address.)
   const routed = $derived(router.page === 'sessions' ? 'players' : router.page);
   const page = $derived(nav.some((n) => n.page === routed) ? routed : 'dashboard');
+
+  // Signed out: a new server without accounts shows the first-run page instead of the login (the
+  // server answers `needed` only to a browser on its own computer).
+  let setup = $state<{ needed: boolean; name: string } | null>(null);
+  $effect(() => {
+    if (auth.loggedIn || router.page === 'register') return;
+    void api.GET('/api/v1/setup').then(({ data }) => (setup = data ? { needed: data.needed, name: data.name } : { needed: false, name: '' }));
+  });
 
   // The server link is only polled while an admin is signed in.
   $effect(() => {
@@ -131,8 +141,10 @@
   });
 </script>
 
-{#if !auth.loggedIn}
-  <Login />
+{#if router.page === 'register'}
+  <Register />
+{:else if !auth.loggedIn}
+  {#if setup?.needed}<Setup name={setup.name} />{:else}<Login />{/if}
 {:else}
   <a class="skip" href="#main">Skip to content</a>
   <div class="window">

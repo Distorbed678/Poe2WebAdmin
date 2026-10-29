@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "Web admin SPA for the PoE2 0.5.5e private server",
+  "description": "Web admin SPA for the PoE2 0.5.5e.hotfix1 private server",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
